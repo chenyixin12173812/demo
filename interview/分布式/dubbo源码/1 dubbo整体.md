@@ -99,3 +99,19 @@
 # 设计原则
 
 **本章节的设计原则摘录自梁飞在 javaeye 上发表的系列文章。**
+
+
+
+# dubbo入口
+
+
+
+![1602070916859](C:\Users\chen\AppData\Roaming\Typora\typora-user-images\1602070916859.png)
+
+
+
+也是扩展难点，dubbo自带的一种实现
+
+
+
+![1602070839969](C:\Users\chen\AppData\Roaming\Typora\typora-user-images\1602070839969.png)
