@@ -919,6 +919,8 @@ b-树，每个节点数据，每个节点都要扫描。B+树只需要扫描子�
 
  由于非终结点并不是最终指向文件内容的结点，而只是叶子结点中关键字的索引。所以任何关键字的查       找必须走一条从根结点到叶子结点的路。所有关键字查询的路径长度相同，导致每一个数据的查询效率相当 
 
+5  因为B树不管叶子节点还是非叶子节点，都会保存数据，**这样导致在非叶子节点中能保存的指针数量变少（有些资料也称为扇出），指针少的情况下要保存大量数据，只能增加树的高度，导致IO操作变多**，查询性能变低 
+
 # 19 自动提交事物
 
 1. DDL
@@ -1048,3 +1050,28 @@ MyISAM只支持表级锁，并且读写不可并发操作。
 # 22 索引会失效 
 
  https://blog.csdn.net/liwenxia626/article/details/80792677 
+
+# 23  InnoDB一棵B+树可以存放多少行数据？这个问题的简单回答是：约2千万 
+
+在计算机中磁盘存储数据最小单元是扇区，一个扇区的大小是512字节，而文件系统（例如XFS/EXT4）他的最小单元是块，一个块的大小是4k，而对于我们的InnoDB存储引擎也有自己的最小储存单元——页（Page），一个页的大小是16K。
+
+nnoDB存储引擎默认一个数据页大小为16kb，非叶子节点存放（key，pointer），pointer为6个字节，key为4个字节，即非叶子节点能存放16kb/14左右的key，pointer，而**叶子节点如果一条数据大小为100字节，那一个叶子节点大约可存放160条数据。**
+
+如果高度为3，则可存放数据为：16kb/14 * 16kb/14 * 160**大约1亿多数据**。
+
+因此InnoDB存储引擎b+树的高度基本为2-3.
+
+ 
+
+![img](https://images2015.cnblogs.com/blog/569090/201703/569090-20170328142941623-2145260028.png)
+
+
+
+
+
+下面几张图可以帮你理解最小存储单元：
+
+文件系统中一个文件大小只有1个字节，但不得不占磁盘上4KB的空间。
+
+![img](https://imgconvert.csdnimg.cn/aHR0cHM6Ly9tbWJpei5xcGljLmNuL3N6X21tYml6X3BuZy9IVjR5VEk2UGpiSVM2YTVjT0xtaWJ3U1ZsUGZIZEtrbnBabUhINUFsUkhSZ2MwSDJvcjBmeDZramljSFRaeG1pYTZQdXJvN1pqbnV3ODN0cWdPQklmdGFaQS82NDA?x-oss-process=image/format,png)
+
