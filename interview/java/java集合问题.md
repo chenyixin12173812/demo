@@ -70,3 +70,103 @@ AVL树和红黑树有几点比较和区别：
 | HashMap中使用键对象来计算hashcode值         | HashSet使用成员对象来计算hashcode值，对于两个对象来说hashcode可能相同，所以equals()方法用来判断对象的相等性，如果两个对象不同的话，那么返回false |
 | HashMap比较快，因为是使用唯一的键来获取对象 | HashSet较HashMap来说比较慢                                   |
 
+# 10 hashmap的问题
+
+## 1 hashmap多线程操作同时调用put()方法后可能导致get()死循环,从而使CPU使用率达到100%,从而使服务器宕机. 
+
+多个线程put的时候造成了某个key值Entry key List的死循环，然后再调用put方法操作的时候就会进入链表的死循环内。  
+
+**如何产生的？**
+
+ 内部实现机制(在多线程环境且未作同步的情况下，对同一个HashMap做put操作可能导致两个或以上线程同时做rehash动作，就可能导致循环键表出现. 
+
+## (1)正常的ReHash过程(hashmap产生死循环链表的操作)
+
+抄了个图做个演示。
+
+1. 我假设了我们的hash算法就是简单的用key mod 一下表的大小（也就是数组的长度）。
+2. 最上面的是old hash 表，其中的Hash表的size=2, 所以key = 3, 7, 5，在mod 2以后都冲突在table1这里了。
+3. 接下来的三个步骤是Hash表 resize成4，然后所有的 重新rehash的过程。
+
+ 
+
+![img](https://images.cnblogs.com/cnblogs_com/andy-zhou/817145/o_HashMap001.jpg)
+
+ 
+
+## (2)并发的Rehash过程
+
+（1）假设我们有两个线程。我用红色和浅蓝色标注了一下。我们再回头看一下我们的 transfer代码中的这个细节：
+
+```java
+do {    Entry<K,V> next = e.next; // <--假设线程一执行到这里就被调度挂起了    int i = indexFor(e.hash, newCapacity);    e.next = newTable[i];    newTable[i] = e;    e = next;} while (e != null);
+```
+
+ 而我们的线程二执行完成了。于是我们有下面的这个样子。
+
+![img](https://images.cnblogs.com/cnblogs_com/andy-zhou/817145/o_HashMap002.jpg)
+
+ 
+
+注意：因为Thread1的 e 指向了key(3)，而next指向了key(7)，其在线程二rehash后，指向了线程二重组后的链表。我们可以看到链表的顺序被反转后。
+
+（2）线程一被调度回来执行。
+
+1. 先是执行 newTalbe[i] = e。
+2. 然后是e = next，导致了e指向了key(7)。
+3. 而下一次循环的next = e.next导致了next指向了key(3)。
+
+![img](https://images.cnblogs.com/cnblogs_com/andy-zhou/817145/o_HashMap003.jpg)
+
+###  (3)再接下来
+
+ 线程一接着工作。把key(7)摘下来，放到newTable[i]的第一个，然后把e和next往下移。
+
+![img](https://images.cnblogs.com/cnblogs_com/andy-zhou/817145/o_HashMap004.jpg)
+
+###  （4）环形链接出现
+
+e.next = newTable[i] 导致 key(3).next 指向了 key(7)。注意：此时的key(7).next 已经指向了key(3)， 环形链表就这样出现了。 
+
+![img](https://images.cnblogs.com/cnblogs_com/andy-zhou/817145/o_HashMap005.jpg)
+
+ 于是，当我们的线程一调用到，HashTable.get(11)时，悲剧就出现了——Infinite Loop
+
+
+
+## 3 多线程put的时候可能导致元素丢失
+
+HashMap另外一个并发可能出现的问题是，可能产生元素丢失的现象。
+
+考虑在多线程下put操作时，执行addEntry(hash, key, value, i)，如果有产生哈希碰撞，
+导致两个线程得到同样的bucketIndex去存储，就可能会出现覆盖丢失的情况：
+
+
+
+
+
+
+
+# 2 内存泄漏
+
+# 3 头插法和尾插法
+
+1.JDK8以前是头插法，JDK8后是尾插法
+
+2.为什么要从头插法改成尾插法？
+A.因为头插法会造成死链，[参考链接](https://blog.csdn.net/chenyiminnanjing/article/details/82706942)
+B.JDK7用头插是考虑到了一个所谓的热点数据的点(新插入的数据可能会更早用到)，但这其实是个伪命题,因为JDK7中rehash的时候，旧链表迁移新链表的时候，如果在新表的数组索引位置相同，则链表元素会倒置(就是因为头插) 所以最后的结果 还是打乱了插入的顺序 所以总的来看支撑JDK7使用头插的这点原因也不足以支撑下去了 所以就干脆换成尾插 一举多得
+
+# 11 jdk1.7与jdk1.8中HashMap区别
+
+\1. 最重要的一点是底层结构不一样，1.7是数组+链表，1.8则是数组+链表+红黑树结构;
+
+\2. jdk1.7中当哈希表为空时，会先调用inflateTable()初始化一个数组；而1.8则是直接调用resize()扩容;
+
+\3. 插入键值对的put方法的区别，1.8中会将节点插入到链表尾部，而1.7中是采用头插；
+
+\4. jdk1.7中的hash函数对哈希值的计算直接使用key的hashCode值，而1.8中则是采用key的hashCode异或上key的hashCode进行无符号右移16位的结果，避免了只靠低位数据来计算哈希时导致的冲突，计算结果由高低位结合决定，使元素分布更均匀；
+\5. 扩容时1.8会保持原链表的顺序，而1.7会颠倒链表的顺序；而且1.8是在元素插入后检测是否需要扩容，1.7则是在元素插入前；
+\6. jdk1.8是扩容时通过hash&cap==0将链表分散，无需改变hash值，而1.7是通过更新hashSeed来修改hash值达到分散的目的；
+
+\7. 扩容策略：1.7中是只要不小于阈值就直接扩容2倍；而1.8的扩容策略会更优化，当数组容量未达到64时，以2倍进行扩容，超过64之后若桶中元素个数不小于7就将链表转换为红黑树，但如果红黑树中的元素个数小于6就会还原为链表，当红黑树中元素不小于32的时候才会再次扩容。

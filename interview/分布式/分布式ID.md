@@ -239,6 +239,7 @@ leaf.name=com.sankuai.leaf.opensource.testleaf.segment.enable=trueleaf.jdbc.url=
 - 启动Leaf-snowflake服务，连接Zookeeper，在leaf_forever父节点下检查自己是否已经注册过（是否有该顺序子节点）。
 - 如果有注册过直接取回自己的workerID（zk顺序节点生成的int类型ID号），启动服务。
 - 如果没有注册过，就在该父节点下面创建一个持久顺序节点，创建成功后取回顺序号当做自己的workerID号，启动服务。
+- **定时上报自己的时钟，用于启动的时候，防时钟回拨**
 
 但`Leaf-snowflake`对Zookeeper是一种弱依赖关系，除了每次会去ZK拿数据以外，也会在本机文件系统上缓存一个`workerID`文件。一旦ZooKeeper出现问题，恰好机器出现故障需重启时，依然能够保证服务正常启动。
 
@@ -278,3 +279,66 @@ uid-generator使用的就是snowflake，只是在生产机器id，也叫做workI
 uid-generator中的workId是由uid-generator自动生成的，并且考虑到了应用部署在docker上的情况，在uid-generator中用户可以自己去定义workId的生成策略，默认提供的策略是：**应用启动时由数据库分配。说的简单一点就是：应用在启动时会往数据库表(uid-generator需要新增一个WORKER_NODE表)中去插入一条数据，数据插入成功后返回的该数据对应的自增唯一id就是该机器的workId，而数据由host，port组成。**
 
 **对于uid-generator中的workId，占用了22个bit位，时间占用了28个bit位，序列化占用了13个bit位，需要注意的是，和原始的snowflake不太一样，时间的单位是秒，而不是毫秒，workId也不一样，同一个应用每重启一次就会消费一个workId**。
+
+## 3 公司内部
+
+微调snowFlake
+
+1 40位时间戳，可以33年
+
+2 5bit 32个分区
+
+3 11位机器id 2048个机房
+
+4 7bit 序列 12万个id
+
+业务端 
+
+   本地id和机器id，并定时上报生成ID使用的时间戳
+
+分布式id服务：通过ELB负载均衡，无状态的，通过ETCD分配workID
+
+etcd： 
+
+分配给用于addid+secret
+
+分配wordId和业务id对于关系
+
+业务上报时间戳
+
+
+
+可靠性设计
+
+1 当服务器不可用
+
+只有启动启动时获得一次机房id和机器id，缓存本地文件中，分布式id服务挂掉，不影响业务运行。
+
+2 时钟回拨
+
+产生id，发现时间小于上次时间，则使用上次加+1
+
+3 服务重启，时间还未同步
+
+客户端定时上报，缓存自己产生id用的时间戳。当业务重启的时候，id服务器返回上次的时间戳，客户端发现本地时间小于上次的时间戳。就放弃本地时间，使用上次的时间戳进行+1。
+
+4 服务器id随机分配
+
+客户端上报时间戳，会上报自己的机器id，服务器发现重复id返回异常，客户端重新申请机器id
+
+
+
+# 3 对比
+
+| --                                 | --                                                           | --                                                           |
+| ---------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| +1                                 | 数字类型<br />趋势递增                                       | 必须依赖服务计数（mysql或redis                               |
+| 时间戳+随机数                      | 趋势递增<br />不依赖第三方服务                               | 存在重复可能                                                 |
+| UUID                               | 不依赖任何第三方部件<br/>唯一性强</br>                       | 无序</br><br>太长</br>                                       |
+| 原生snowflake                      | 不依赖第三方部件<br />数字类型<br />趋势递增<br />含时间戳   | workId有限<br />依赖时钟同步不能回拨                         |
+| sharding-shpher/Mycat（snowflake） | snowflake算法优势                                            | 手动配置workId,不方便自动部署                                |
+| 美团 leaf-segment                  | 批量取号                                                     | 依赖leaf服务器<br />依赖数据库<br />号不连续                 |
+| 美团 leaf-snowflake                | snowflake算法优势<br />本地缓存<br />zk存储workId<br />防回拨 | 依赖leaf服务器                                               |
+| 百度uid-generator                  | snowflake算法优势<br />不担心workId                          | 依赖mysql数据库<br />单机每秒数量有限，借用未来时间会导致Id波动 |
+| 美团 leaf-snowflake                | 加密<br />etcd                                               | 依赖leaf服务器                                               |
+

@@ -123,6 +123,16 @@ Linkerd是CNCF的项目，是Scala开发的service mesh应用。他提供反向�
 
 综合上面的分析，基础公有云的API网关只有满足一部分简单客户的需求，对于很多企业来说私有云的API网关才是正确的选择。 
 
+# 6 总结
+
+1 一般中小型企业选择zuul或spring gateway，并在上边开发动态路由和灰度发布等功能
+
+2 大公司一般自己基于Nginx+Lua+ OpenResty开发
+
+
+
+
+
 # 五 Service Mesh
 
 
