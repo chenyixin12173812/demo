@@ -283,56 +283,8 @@ NavigableSet扩展了 SortedSet，具有了为给定搜索目标报告最接近�
 
 # 14.HashMap
 
-https://www.cnblogs.com/duodushuduokanbao/p/9492952.html
 
-https://blog.csdn.net/weixin_37356262/article/details/80543218
-
-HashMap存储的是key-value的键值对，允许key为null，也允许value为null。HashMap内部为数组+链表的结构，会根据key的hashCode值来确定数组的索引(确认放在哪个桶里)，如果遇到索引相同的key，桶的大小是2，如果一个key的hashCode是7，一个key的hashCode是3，那么他们就会被分到一个桶中(hash冲突)，如果发生hash冲突，HashMap会将同一个桶中的数据以链表的形式存储，但是如果发生hash冲突的概率比较高，就会导致同一个桶中的链表长度过长，遍历效率降低，所以在**JDK1.8中如果链表长度到达阀值(默认是8)，就会将链表转换成红黑二叉树**。
-
-//HashMap的主干数组，可以看到就是一个Entry数组，初始值为空数组{}，主干数组的长度一定是2的次幂。
-//至于为什么这么做，后面会有详细分析。
-transient Entry<K,V>[] table = (Entry<K,V>[]) EMPTY_TABLE;
-
-**HashMap由数组+链表组成的**，数组是HashMap的主体，链表则是主要为了解决哈希冲突而存在的，如果定位到的数组位置不含链表（当前entry的next指向null）,那么查找，添加等操作很快，仅需一次寻址即可；如果定位到的数组包含链表，对于添加操作，其时间复杂度为O(n)，首先遍历链表，存在即覆盖，否则新增；对于查找操作来讲，仍需遍历链表，然后通过key对象的equals方法逐一比对查找。所以，性能考虑，**HashMap中的链表出现越少，性能才会越好。**
-
-```java
-//默认桶16个
-static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
-
-//默认桶最多有2^30个
-static final int MAXIMUM_CAPACITY = 1 << 30;
-
-//默认负载因子是0.75
-static final float DEFAULT_LOAD_FACTOR = 0.75f;
-
-//能容纳最多key_value对的个数
- int threshold;
-
-//一共key_value对个数
-int size;
-```
-
- 因为**HashMap扩容每次都是扩容为原来的2倍，所以length总是2的次方**，这是非常规的设置，常规设置是把桶的大小设置为素数，因为素数发生hash冲突的概率要小于合数，比如HashTable的默认值设置为11，就是桶的大小为素数的应用(HashTable扩容后不能保证是素数)。HashMap采用这种设置是为了在取模和扩容的时候做出优化。
-
-**hashMap是通过key的hashCode的高16位和低16位异或后和桶的数量取模得到索引位置，即key.hashcode()^(hashcode>>>16)%length,当length是2^n时，h&（length-1）运算等价于h%length，而&操作比%效率更高。而采用高16位和低16位进行异或，也可以让所有的位数都参与越算，使得在length比较小的时候也可以做到尽量的散列**。
-
-**在扩容的时候，如果length每次是2^n，那么重新计算出来的索引只有两种情况，一种是 old索引+16，另一种是索引不变，所以就不需要每次都重新计算索引**。
-
-
-
-面试问题：
-
-1.Hashtable的size()方法中明明只有一条语句”return count”，为什么还要做同步？**
-这是我之前的一个困惑，不知道大家有没有想过这个问题。某个方法中如果有多条语句，并且都在操作同一个类变量，那么在多线程环境下不加锁，势必会引发线程安全问题，这很好理解，但是size()方法明明只有一条语句，为什么还要加锁？
-
-
-关于这个问题，在慢慢地工作、学习中，有了理解，主要原因有两点：
-（1） 同一时间只能有一条线程执行固定类的同步方法，但是对于类的非同步方法，可以多条线程同时访问 。所以，这样就有问题了，可能线程A在执行Hashtable的put方法添加数据，线程B则可以正常调用size()方法读取Hashtable中当前元素的个数，那读取到的值可能不是最新的，可能线程A添加了完了数据，但是没有对size++，线程B就已经读取size了，那么对于线程B来说读取到的size一定是不准确的。而给size()方法加了同步之后，意味着线程B调用size()方法只有在线程A调用put方法完毕之后才可以调用，这样就保证了线程安全性
-
-
-（2） CPU执行代码，执行的不是Java代码，这点很关键，一定得记住 。Java代码最终是被翻译成汇编代码执行的，汇编代码才是真正可以和硬件电路交互的代码。 即使你看到Java代码只有一行，甚至你看到Java代码编译之后生成的字节码也只有一行，也不意味着对于底层来说这句语句的操作只有一个 。一句”return count”假设被翻译成了三句汇编语句执行，完全可能执行完第一句，线程就切换了。
-
-
+见面试
 
 
 
@@ -752,11 +704,7 @@ private void expungeStaleEntries() {
 
 # 18 ConcurrentHashMap
 
-
-
-
-
-
+见面试
 
 
 
@@ -1344,5 +1292,5 @@ public ArrayBlockingQueue(int capacity, boolean fair)
 - 通用场景中，LinkedBlockingQueue的吞吐量一般优于ArrayBlockingQueue，因为它实现了更加细粒度的锁操作。
 - ArrayBlockingQueue实现比较简单，性能更好预测，属于表现稳定的“选手”。
 - 如果需要实现的是两个线程之间接力性（handoff）的场景，可能会选择CountDownLatch，但是SynchronousQueue也是完美符合这种场景的，而且线程间协调和数据传输统一起来，代码更加规范。
-- 可能令人意外的是，很多时候SynchronousQueue的性能表现，往往大大超过其他实现，尤其是在队列元素较小的场景。
+- 可能令人意外的是，**很多时候SynchronousQueue的性能表现，往往大大超过其他实现，尤其是在队列元素较小的场景。**
 
