@@ -340,5 +340,5 @@ etcd：
 | 美团 leaf-segment                  | 批量取号                                                     | 依赖leaf服务器<br />依赖数据库<br />号不连续                 |
 | 美团 leaf-snowflake                | snowflake算法优势<br />本地缓存<br />zk存储workId<br />防回拨 | 依赖leaf服务器                                               |
 | 百度uid-generator                  | snowflake算法优势<br />不担心workId                          | 依赖mysql数据库<br />单机每秒数量有限，借用未来时间会导致Id波动 |
-| 美团 leaf-snowflake                | 加密<br />etcd                                               | 依赖leaf服务器                                               |
+| 公司                               | 加密<br />etcd                                               | 依赖leaf服务器                                               |
 

@@ -203,3 +203,23 @@ zookeeper采用了递增的事务Id来标识，所有的proposal都在被提出�
 2个epoch（集群才有）
 
 ![1602174677381](C:\Users\chen\AppData\Roaming\Typora\typora-user-images\1602174677381.png)
+
+## 24 事件发生的太快来不及watch怎么办
+
+通常我们使用watch功能是为了让程序阻塞等待某些事件的发生并进行相应的处理，然而现实世界中处理的速度有可能跟不上事件发生的速度。 比如ZooKeeper的watch在捕捉到一个事件后channel就会关闭，需要我们再次去发送watch请求。在此期间发生的事件将丢失.
+
+# 25 Etcd比ZooKeeper优点
+
+不得不承认，作为后起之秀，Etcd在watch方面完胜ZooKeeper。
+
+从功能的角度来看，Etcd只需要调用一次watch操作就可以捕捉所有的事件，相比ZooKeeper大大简化了客户端开发者的工作量。 ZooKeeper的watch获得的channel只能使用一次，而Etcd的watch获得的channel可以被复用，新的事件通知会被不断推送进来，而无需客户端重复进行watch，这种行为也更符合我们对go channel的预期。
+
+ZooKeeper对事件丢失的问题没有解决办法。Etcd则提供了版本号帮助客户端尽量捕捉每一次变化。要注意的是每一次变化都会产生一个新的版本号，而这些版本不会被永久保留。Etcd会根据其版本留存策略定时将超出阈值的旧版本从版本历史中清除。
+
+从开发者的角度来看，ZooKeeper是用Java写的，且使用了自己的TCP协议。对于程序员来说不太友好，如果离开了ZooKeeper提供的SDK自己写客户端会有一定的技术壁垒，而ZooKeeper官方只提供了Java和C语言的SDK，其它语言的开发者就只能去寻求第三方库的帮助，比如[http://github.com/samuel/go-zookeeper/zk](https://link.zhihu.com/?target=http%3A//github.com/samuel/go-zookeeper/zk)。
+
+另一方面，Etcd是用Go写的，使用了Google的gRPC协议，官方除了提供Go语言的SDK之外，也提供了Java的SDK：[https://github.com/etcd-io/jetcd](https://link.zhihu.com/?target=https%3A//github.com/etcd-io/jetcd)。 另外Etcd官方还维护了一个zetcd项目：[https://github.com/etcd-io/zetcd](https://link.zhihu.com/?target=https%3A//github.com/etcd-io/zetcd)，它在Etcd外面套了一个ZooKeeper的壳。让那些ZooKeeper的客户端可以无缝移植到Etcd上。有兴趣的小伙伴可以尝试一下。
+
+
+
+  

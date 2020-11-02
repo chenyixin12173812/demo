@@ -25,6 +25,8 @@
 
 -Xss256k // 设置每个线程的堆栈大小 一般256 最大512kb-1M
 
+ -XX:MaxDirectMemorySize可以设置java堆外内存的峰值 
+
 -XX:PretenureSizeThreshold 可以设置直接进入老年代的对象大小。
 
 ## 1.2运维辅助信息 ：
@@ -142,7 +144,6 @@ CMSInitiatingPermOccupancyFraction： 当持久代里的使用比例达到一定
 >
 > Full GC 执行频率不算频繁，不低于10分钟1次。
 >
-> cpu一般不超过30%
 
 # 2 参数判定：
 
@@ -154,9 +155,9 @@ CMSInitiatingPermOccupancyFraction： 当持久代里的使用比例达到一定
 
 
 
-# 4 内存溢出和泄漏
+# 4 堆外内存泄漏
 
-内存溢出指的是内存不够用了，撑爆内存。泄漏就是没有被回收。泄漏会导致溢出。
+
 
 # 5 cpu突然暴增
 

@@ -20,7 +20,7 @@
 
 
 
-# 1.消息重复
+# 1.消息重复产生
 
 原因1：强行kill线程，导致消费后的数据，offset没有提交（消费系统宕机、重启等）。 
 原因2：设置offset为自动提交，关闭kafka时，如果在close之前，调用 consumer.unsubscribe() 则有可能部分offset没提交，下次重启会重复消费。例如：
@@ -348,6 +348,8 @@ Kafka有什么优缺点？
 
 
 
+# 30 kafka为什么这么快
 
+ 分区并行、ISR机制、顺序写入、页缓存、高效序列化等等，零拷贝当然也是其中之一。由于Kafka的消息存储涉及到海量数据读写，所以利用零拷贝能够显著地降低延迟，提高效率。 
 
  https://cloud.tencent.com/developer/article/1639123 
