@@ -1,8 +1,91 @@
 
 
-# 10、说说你对Netty的了解？
+# 9 ChannelOption
 
+ **1、ChannelOption.SO_BACKLOG**
 
+​     ChannelOption.SO_BACKLOG对应的是**tcp/ip协议listen函数中的backlog参数**，函数listen(int socketfd,int backlog)用来初始化服务端可连接队列，服务端处理客户端连接请求是顺序处理的，所以同一时间只能处理一个客户端连接，多个客户端来的时候，服务端将不能处理的客户端连接请求放在队列中等待处理，**backlog参数指定了队列的大小**。BACKLOG用于构造服务端套接字ServerSocket对象，标识当服务器请求处理线程都处于工作是(用完了)，用于临时存放已完成三次握手的请求的队列的最大长度。如果未设置或所设置的值小于1，Java将使用默认值50
+
+2、**ChannelOption.SO_REUSEADDR** (一般用于option–>boss)
+SO_REUSEADDR 对应的是socket选项中SO_REUSEADDR，这个参数表示允许重复使用本地地址和端口，例如，某个服务占用了TCP的8080端口，其他服务再对这个端口进行监听就会报错，SO_REUSEADDR这个参数就是用来解决这个问题的，该参数允许服务公用一个端口，这个在服务器程序中比较常用，例如某个进程非正常退出，对一个端口的占用可能不会立即释放，这时候如果不设置这个参数，其他进程就不能立即使用这个端口
+
+​      ChanneOption.SO_REUSEADDR对应于套接字选项中的**SO_REUSEADDR，这个参数表示允许重复使用本地地址和端口**，
+
+​      比如，某个服务器进程占用了TCP的80端口进行监听，此时再次监听该端口就会返回错误，使用该参数就可以解决问题，该参数允许共用该端口，这个在服务器程序中比较常使用，
+
+​      比如某个进程非正常退出，该程序占用的端口可能要被占用一段时间才能允许其他进程使用，而且程序死掉以后，内核一需要一定的时间才能够释放此端口，不设置SO_REUSEADDR就无法正常使用该端口。
+
+3、ChannelOption.SO_KEEPALIVE
+
+​      Channeloption.SO_KEEPALIVE参数对应于套接字选项中的SO_KEEPALIVE，**该参数用于设置TCP连接，当设置该选项以后，连接会测试链接的状态，这个选项用于可能长时间没有数据交流的连接。当设置该选项以后，如果在两小时内没有数据的通信时，TCP会自动发送一个活动探测数据报文**。
+
+4、ChannelOption.SO_SNDBUF和ChannelOption.SO_RCVBUF
+
+​      ChannelOption.SO_SNDBUF参数对应于套接字选项中的SO_SNDBUF，ChannelOption.SO_RCVBUF参数对应于套接字选项中的SO_RCVBUF这两个参数用于操作接收缓冲区和发送缓冲区的大小，接收缓冲区用于保存网络协议站内收到的数据，直到应用程序读取成功，发送缓冲区用于保存发送数据，直到发送成功。
+
+5、ChannelOption.SO_LINGER
+
+​      ChannelOption.SO_LINGER参数对应于套接字选项中的SO_LINGER,Linux内核默认的处理方式是当用户调用close（）方法的时候，函数返回，在可能的情况下，尽量发送数据，不一定保证会发生剩余的数据，造成了数据的不确定性，使用SO_LINGER可以阻塞close()的调用时间，直到数据完全发送
+
+6、ChannelOption.TCP_NODELAY (一般用于childOption)
+TCP_NODELAY 对应于socket选项中的TCP_NODELAY，该参数的使用和Nagle算法有关，Nagle算法是将小的数据包组装为更大的帧进行发送，而不会来一个数据包发送一次，目的是为了提高每次发送的效率，因此在数据包没有组成足够大的帧时，就会延迟该数据包的发送，虽然提高了网络负载却造成了延时，TCP_NODELAY参数设置为true，就可以禁用Nagle算法，即使用小数据包即时传输。
+TCP_NODELAY就是用于启用或关闭Nagle算法。如果要求高实时性，有数据发送时就马上发送，就将该选项设置为true关闭Nagle算法；如果要减少发送次数减少网络交互，就设置为false等累积一定大小后再发送。默认为false。
+
+​      ChannelOption.TCP_NODELAY参数对应于套接字选项中的TCP_NODELAY,该参数的使用与Nagle算法有关,**Nagle算法是将小的数据包组装为更大的帧然后进行发送，而不是输入一次发送一次,因此在数据包不足的时候会等待其他数据的到了，组装成大的数据包进行发送，虽然该方式有效提高网络的有效负载，但是却造成了延时，而该参数的作用就是禁止使用Nagle算法**，使用于小数据即时传输，于TCP_NODELAY相对应的是TCP_CORK，该选项是需要等到发送的数据量最大的时候，一次性发送数据，适用于文件传输。
+
+7、IP_TOS
+
+IP参数，设置**IP头部的Type-of-Service字段，用于描述IP包的优先级和QoS选项**。
+
+8、ALLOW_HALF_CLOSURE
+
+Netty参数，一个连接的远端关闭时本地端是否关闭，默认值为False。值为False时，连接自动关闭；**为True时，触发ChannelInboundHandler的userEventTriggered()方法，事件为ChannelInputShutdownEvent**。
+
+9 。
+
+10 **ChannelOption.ALLOCATOR**
+Netty参数，ByteBuf的分配器(重用缓冲区)，默认值为ByteBufAllocator.DEFAULT，4.0版本为UnpooledByteBufAllocator，4.1版本为PooledByteBufAllocator。该值也可以使用系统参数io.netty.allocator.type配置，使用字符串值：“unpooled”，“pooled”。
+额外解释， Netty4.1使用对象池，重用缓冲区(可以直接只用这个配置)
+bootstrap.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
+bootstrap.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
+
+11 ChannelOption.RCVBUF_ALLOCATOR** （一般用于option->boss）
+Netty参数，用于Channel分配接受Buffer的分配器，默认值为AdaptiveRecvByteBufAllocator.DEFAULT，是一个自适应的接受缓冲区分配器，能根据接受到的数据自动调节大小。可选值为FixedRecvByteBufAllocator，固定大小的接受缓冲区分配器。
+
+12 **ChannelOption.SO_SNDBUF 和ChannelOption.SO_RCVBUF** (一般用于childOption)
+SO_SNDBUF 和 SO_RCVBUF对应socket中的SO_SNDBUF和SO_RCVBUF参数，即设置发送缓冲区和接收缓冲区的大小，***发送缓冲区用于保存发送数据，直到发送成功***，接收缓冲区用于保存网络协议站内收到的数据，直到程序读取成功。
+**或者**
+**SO_RCVBUF参数**，TCP数据接收缓冲区大小。该缓冲区即TCP接收滑动窗口，linux操作系统可使用命令：cat /proc/sys/net/ipv4/tcp_rmem查询其大小。一般情况下，该值可由用户在任意时刻设置，但当设置值超过64KB时，需要在连接到远端之前设置。
+**SO_SNDBUF参数**，TCP数据发送缓冲区大小。该缓冲区即TCP发送滑动窗口，linux操作系统可使用命令：cat /proc/sys/net/ipv4/tcp_smem查询其大小。
+
+13 ChannelOption.CONNECT_TIMEOUT_MILLIS**： (一般用于Bootstrap或者childOption)
+Netty参数，连接超时毫秒数，默认值30000毫秒即30秒。
+
+- **ChannelOption.SO_LINGER** (一般用于childOption)
+  Socket参数，关闭Socket的延迟时间，默认值为-1，表示禁用该功能。-1表示socket.close()方法立即返回，但OS底层会将发送缓冲区全部发送到对端。0表示socket.close()方法立即返回，OS放弃发送缓冲区的数据直接向对端发送RST包，对端收到复位错误。非0整数值表示调用socket.close()方法的线程被阻塞直到延迟时间到或发送缓冲区中的数据发送完毕，若超时，则对端会收到复位错误。
+- **ChannelOption.SO_KEEPALIVE**
+    Socket参数，连接保活，默认值为False。启用该功能时，TCP会主动探测空闲连接的有效性。可以将此功能视为TCP的心跳机制，需要注意的是：默认的心跳间隔是7200s即2小时。Netty默认关闭该功能。
+- **ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK** (一般用于childOption)
+    Netty参数，写高水位标记，默认值64KB。如果Netty的写缓冲区中的字节超过该值，Channel的isWritable()返回False。
+- **ChannelOption.WRITE_BUFFER_LOW_WATER_MARK** (一般用于childOption)
+    Netty参数，写低水位标记，默认值32KB。当Netty的写缓冲区中的字节超过高水位之后若下降到低水位，则Channel的isWritable()返回True。写高低水位标记使用户可以控制写入数据速度，从而实现流量控制。推荐做法是：每次调用channl.write(msg)方法首先调用channel.isWritable()判断是否可写。
+- **ChannelOption.AUTO_READ** (一般用于childOption)
+    Netty参数，自动读取，默认值为True。Netty只在必要的时候才设置关心相应的I/O事件。对于读操作，需要调用channel.read()设置关心的I/O事件为OP_READ，这样若有数据到达才能读取以供用户处理。该值为True时，每次读操作完毕后会自动调用channel.read()，从而有数据到达便能读取；否则，需要用户手动调用channel.read()。需要注意的是：当调用config.setAutoRead(boolean)方法时，如果状态由false变为true，将会调用channel.read()方法读取数据；由true变为false，将调用config.autoReadCleared()方法终止数据读取。
+- **ChannelOption.MAX_MESSAGES_PER_READ**
+    Netty参数，一次Loop读取的最大消息数，对于ServerChannel或者NioByteChannel，默认值为16，其他Channel默认值为1。默认值这样设置，是因为：ServerChannel需要接受足够多的连接，保证大吞吐量，NioByteChannel可以减少不必要的系统调用select。
+- **ChannelOption.WRITE_SPIN_COUNT**
+    Netty参数，一个Loop写操作执行的最大次数，默认值为16。也就是说，对于大数据量的写操作至多进行16次，如果16次仍没有全部写完数据，此时会提交一个新的写任务给EventLoop，任务将在下次调度继续执行。这样，其他的写请求才能被响应不会因为单个大数据量写请求而耽误。
+- **ChannelOption.MESSAGE_SIZE_ESTIMATOR**
+    Netty参数，消息大小估算器，默认为DefaultMessageSizeEstimator.DEFAULT。估算ByteBuf、ByteBufHolder和FileRegion的大小，其中ByteBuf和ByteBufHolder为实际大小，FileRegion估算值为0。该值估算的字节数在计算水位时使用，FileRegion为0可知FileRegion不影响高低水位
+- **ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP**
+    Netty参数，单线程执行ChannelPipeline中的事件，**默认值为True**。该值控制执行ChannelPipeline中执行ChannelHandler的线程。如果为True，**整个pipeline由一个线程执行**，这样不需要进行线程切换以及线程同步，**是Netty4的推荐做法**；如果为False，ChannelHandler中的处理过程会由Group中的不同线程执行
+
+# 10 netty支持的各种socketchannel
+
+- OioSocketChannel：传统，阻塞式编程。
+- NioSocketChannel：select/poll或者epoll，jdk 7之后linux下会自动选择epoll。
+- EpollSocketChannel：epoll，仅限linux，提供更多额外选项。
+- EpollDomainSocketChannel：ipc模式，仅限客户端、服务端在相同主机的情况，从4.0.26版本开始支持
 
 # 11、Netty跟Java NIO优势？
 
@@ -79,7 +162,7 @@ EventLoopGroup会包含多个EventLoop。
 
  https://blog.csdn.net/summerZBH123/article/details/79344226 
 
-# 13、Netty的启动流程？
+# 13、Netty的客户端和服务端？
 
 # 13.1 客户端启动流程
 
@@ -361,3 +444,8 @@ NioLoop聚合了多路复用器selector，非阻塞的，netty采用了异步通
 7 内存池
 
 8灵活的TCP参数配置能力，合理设置S0_RCVBUF和SO——SNDBUF的设置可以提升性能提升。
+
+# 39 ChannelFuture
+
+# 40 
+

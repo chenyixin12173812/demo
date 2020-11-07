@@ -2,9 +2,13 @@
 
 **web-server的负载均衡，高可用，扩展性架构是怎么实施的？**
 
-![img](https://mmbiz.qpic.cn/mmbiz_png/YrezxckhYOy8HxPG3ibT4PZ8WXkwAF1GExGFcVxDfDWQrZ7J0iaKib1sL9plGCOEvSBSQAQjK0OZK0N399LFGg7aw/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+![img](TCP%E6%8E%A5%E5%85%A5%E5%B1%82%E7%9A%84%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E3%80%81%E9%AB%98%E5%8F%AF%E7%94%A8%E3%80%81%E6%89%A9%E5%B1%95%E6%80%A7%E6%9E%B6%E6%9E%84.assets/640.webp)
 
 互联网架构中，web-server接入一般使用nginx来做反向代理，实施负载均衡。整个架构分三层：
+
+
+
+
 
 **（1）上游调用层**，一般是browser或者APP；
 
@@ -40,7 +44,7 @@
 
 **方案一：单机法tcp-server**
 
-![img](https://mmbiz.qpic.cn/mmbiz_png/YrezxckhYOy8HxPG3ibT4PZ8WXkwAF1GEiaIWlia9M3CUicpic304E0pR2F49lmGd8Mic7FxD6JJibD2pEAP5IhV0w2LQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+![img](TCP%E6%8E%A5%E5%85%A5%E5%B1%82%E7%9A%84%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E3%80%81%E9%AB%98%E5%8F%AF%E7%94%A8%E3%80%81%E6%89%A9%E5%B1%95%E6%80%A7%E6%9E%B6%E6%9E%84.assets/640-1604745026246.webp)
 
 单个tcp-server显然是可以保证请求一致性：
 
@@ -60,7 +64,7 @@
 
 **方案二：集群法tcp-server**
 
-![img](https://mmbiz.qpic.cn/mmbiz_png/YrezxckhYOy8HxPG3ibT4PZ8WXkwAF1GEVmOhGOtdPr7DFibCCgb7zbksjfL9SKWYbTl29yFHeacsUhWO0D37jTg/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+![img](TCP%E6%8E%A5%E5%85%A5%E5%B1%82%E7%9A%84%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E3%80%81%E9%AB%98%E5%8F%AF%E7%94%A8%E3%80%81%E6%89%A9%E5%B1%95%E6%80%A7%E6%9E%B6%E6%9E%84.assets/640.png)
 
 可以通过搭建tcp-server集群来保证高可用，**客户端来实现负载均衡**：
 
@@ -112,7 +116,7 @@
 
 只有将复杂的策略下沉到服务端，才能根本上解决扩展性的问题。
 
-![img](https://mmbiz.qpic.cn/mmbiz_png/YrezxckhYOy8HxPG3ibT4PZ8WXkwAF1GEsSdfm1ibH1UibJMHgKhos2iaGWXR4MaFYg6vdVLUXibK96Rr00nqFXNqJA/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+![img](TCP%E6%8E%A5%E5%85%A5%E5%B1%82%E7%9A%84%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E3%80%81%E9%AB%98%E5%8F%AF%E7%94%A8%E3%80%81%E6%89%A9%E5%B1%95%E6%80%A7%E6%9E%B6%E6%9E%84.assets/640-1604745063602.webp)
 
 增加一个http接口，将客户端的“IP配置”与“均衡策略”放到服务端是一个不错的方案：
 
@@ -140,7 +144,7 @@
 
 **方案四：tcp-server状态上报**
 
-![img](https://mmbiz.qpic.cn/mmbiz_png/YrezxckhYOy8HxPG3ibT4PZ8WXkwAF1GEVZ3N6ausRQmdURrtzBySKFvxodpGPSZCN3sPs7iaNqjCr963VXByzRw/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+![img](TCP%E6%8E%A5%E5%85%A5%E5%B1%82%E7%9A%84%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E3%80%81%E9%AB%98%E5%8F%AF%E7%94%A8%E3%80%81%E6%89%A9%E5%B1%95%E6%80%A7%E6%9E%B6%E6%9E%84.assets/640-1604745077664.png)
 
 get-tcp-ip接口怎么知道tcp-server集群中各台服务器是否可用呢，tcp-server主动上报是一个潜在方案，如果某一个tcp-server挂了，则会终止上报，对于停止上报状态的tcp-server，get-tcp-ip接口，将不返回给client相应的tcp-server的外网IP。
 
@@ -154,7 +158,7 @@ get-tcp-ip接口怎么知道tcp-server集群中各台服务器是否可用呢，
 
 **方案五：tcp-server状态拉取**
 
-![img](https://mmbiz.qpic.cn/mmbiz_png/YrezxckhYOy8HxPG3ibT4PZ8WXkwAF1GEOUp1Ihzzd4n2wAvafjQ6Gjvnn2m3UYWx7cR6ExyLTTWhfzG4to56vw/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+![img](TCP%E6%8E%A5%E5%85%A5%E5%B1%82%E7%9A%84%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E3%80%81%E9%AB%98%E5%8F%AF%E7%94%A8%E3%80%81%E6%89%A9%E5%B1%95%E6%80%A7%E6%9E%B6%E6%9E%84.assets/640-1604745086266.webp)
 
 **更优的方案**是：web-server通过“拉”的方式获取各个tcp-server的状态，而不是tcp-server通过“推”的方式上报自己的状态。
 

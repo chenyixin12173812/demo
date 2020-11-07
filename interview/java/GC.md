@@ -25,6 +25,12 @@
 
 -Xss256k // 设置每个线程的堆栈大小 一般256 最大512kb-1M
 
+ -XX:MetaSpaceSize可以设置java堆外内存的峰值 
+
+ -XX:MaxMetaSpaceSize可以设置java堆外内存的峰值 
+
+-XX:PretenureSizeThreshold 可以设置直接进入老年代的对象大
+
  -XX:MaxDirectMemorySize可以设置java堆外内存的峰值 
 
 -XX:PretenureSizeThreshold 可以设置直接进入老年代的对象大小。
