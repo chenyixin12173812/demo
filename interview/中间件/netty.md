@@ -168,7 +168,7 @@ EventLoopGroup会包含多个EventLoop。
 
 https://blog.csdn.net/luzhensmart/article/details/108308018
 
- ![img](https://img-blog.csdnimg.cn/20181108233028554.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xpdWppYWhhbjYyOTYyOQ==,size_16,color_FFFFFF,t_70) 
+ ![img](netty.assets/20181108233028554.png) 
 
 1，用户创建Bootstrap实例，通过API设置创建客户端相关的参数，异步发起客户端连接；
 
@@ -196,7 +196,7 @@ https://blog.csdn.net/luzhensmart/article/details/108308018
 
 
 
- ![img](https://img-blog.csdnimg.cn/20181103224517854.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xpdWppYWhhbjYyOTYyOQ==,size_16,color_FFFFFF,t_70) 
+ ![img](netty.assets/20181103224517854.png) 
 
  1 创建ServerBootstrap实例：ServerBootstrap是Netty服务端的启动辅助类，它提供了一系列的方法用于设置服务端启动相关参数，这里用到了Faced设计模式（降低和过多底层API打交道）；另外ServerBootstrap在创建时，是无参的，只需要后边设置对应的参数即可，这边其实是用到了Builder设计模式（只需要关心多个简单的对象构建，不需要关心对象创建的内部细节）。类名：ServerBootstrap
 
@@ -274,7 +274,7 @@ https://blog.csdn.net/luzhensmart/article/details/108308018
 
 (8)避免将ChannelHandler加入到不同的ChannelPipeline中,会出现并发问题.
 
-![img](https://picb.zhimg.com/80/v2-9dec680c1c94f41ee1fd9d9bde947e36_720w.jpg)
+![img](netty.assets/v2-9dec680c1c94f41ee1fd9d9bde947e36_720w.jpg)
 
 从上面的随便挑一个吹水就行。
 
@@ -355,7 +355,7 @@ https://blog.csdn.net/luzhensmart/article/details/108308018
 
 Netty 并没有使用第三方库实现对象池，而是自己实现了一个相对轻量的对象池。通过使用 threadLocal，避免了多线程下取数据时可能出现的线程安全问题，同时，为了实现多线程回收同一个实例，让每个线程对应一个队列，队列链接在 Stack 对象上形成链表，这样，就解决了多线程回收时的安全问题。同时，使用了软引用的map 和 软引用的 thradl 也避免了内存泄漏。
 
-![img](https://pic2.zhimg.com/80/v2-ba67a4cbdddd8e91b163457e90d072f2_720w.jpg)
+![img](netty.assets/v2-ba67a4cbdddd8e91b163457e90d072f2_720w.jpg)
 
 更详细的可阅读文章：
 
@@ -373,7 +373,7 @@ Netty 并没有使用第三方库实现对象池，而是自己实现了一个�
 这个网上很多了，就不说了。
 [https://www.cnblogs.com/coding400/p/10865333.html](https://link.zhihu.com/?target=https%3A//www.cnblogs.com/coding400/p/10865333.html)
 
-![img](https://pic4.zhimg.com/80/v2-28d887e7458772d69c03b30f124a1b51_720w.jpg)
+![img](netty.assets/v2-28d887e7458772d69c03b30f124a1b51_720w.jpg)
 
 # 33、netty的fashwheeltimer的用法，实现原理，是否出现过调用不够准时，怎么解决。**
 

@@ -22,8 +22,8 @@
 
 # 1.消息重复产生
 
-原因1：强行kill线程，导致消费后的数据，offset没有提交（消费系统宕机、重启等）。 
-原因2：设置offset为自动提交，关闭kafka时，如果在close之前，调用 consumer.unsubscribe() 则有可能部分offset没提交，下次重启会重复消费。例如：
+ 1：强行kill线程，导致消费后的数据，offset没有提交（消费系统宕机、重启等）。 
+ 2：设置offset为自动提交，关闭kafka时，如果在close之前，调用 consumer.unsubscribe() 则有可能部分offset没提交，下次重启会重复消费。例如：
 
 try {
     consumer.unsubscribe();
@@ -35,9 +35,11 @@ try {
 } catch (Exception e) {
 }
 上面代码会导致部分offset没提交，下次启动时会重复消费。 
-原因3:（重复消费最常见的原因）：消费后的数据，当offset还没有提交时，partition就断开连接。比如，通常会遇到消费的数据，处理很耗时，导致超过了Kafka的session timeout时间（0.10.x版本默认是30秒），那么就会re-blance重平衡，此时有一定几率offset没提交，会导致重平衡后重复消费。 
-原因4：当消费者重新分配partition的时候，可能出现从头开始消费的情况，导致重发问题。 
-原因5：当消费者消费的速度很慢的时候，可能在一个session周期内还未完成，导致心跳机制检测报告出问题。
+ 3:（重复消费最常见的原因）：消费后的数据，当offset还没有提交时，partition就断开连接。比如，通常会遇到消费的数据，处理很耗时，导致超过了Kafka的session timeout时间（0.10.x版本默认是30秒），那么就会re-blance重平衡，此时有一定几率offset没提交，会导致重平衡后重复消费。 
+  4：当消费者重新分配partition的时候，可能出现从头开始消费的情况，导致重发问题。 
+ 5：当消费者消费的速度很慢的时候，可能在一个session周期内还未完成，导致心跳机制检测报告出问题。
+
+6 ：网路不稳定，生成者不知道配置是否成功发送，重试。
 
 
 
@@ -49,7 +51,7 @@ try {
 
 
 
-# 1.Kafka 的设计时什么样的呢？
+# 3.Kafka 的设计时什么样的呢？
 
 Kafka 将消息以 topic 为单位进行归纳
 
@@ -61,7 +63,7 @@ Kafka 以集群的方式运行，可以由一个或多个服务组成，每个�
 
 producers 通过网络将消息发送到 Kafka 集群，集群向消费者提供消息
 
-# 2 .数据传输的事物定义有哪三种？
+# 4 .数据传输的事物定义有哪三种？
 
 
 
@@ -75,7 +77,27 @@ producers 通过网络将消息发送到 Kafka 集群，集群向消费者提供
 
 且仅仅被传输一次，这是大家所期望的
 
-**3.Kafka 判断一个节点是否还活着有那两个条件？**
+
+
+# 5 MQ作用
+
+1 异步
+
+2 解耦
+
+3 消峰
+
+4 冗余
+
+5 顺序保证
+
+6 缓存
+
+7 可扩展
+
+8 可恢复性
+
+# 6 Kafka 判断一个节点是否还活着有那两个条件？
 
 （1）节点必须可以维护和 ZooKeeper 的连接，Zookeeper 通过心跳机制检查每个节点的连
 
@@ -83,33 +105,17 @@ producers 通过网络将消息发送到 Kafka 集群，集群向消费者提供
 
 （2）如果节点是个 follower,他必须能及时的同步 leader 的写操作，延时不能太久
 
-**4.producer 是否直接将数据发送到 broker 的 leader(主节点)？**
+# 7 producer 是否直接将数据发送到 broker 的 leader(主节点)？
 
-producer 直接将数据发送到 broker 的 leader(主节点)，不需要在多个节点进行分发，为了
+producer 直接将数据发送到 broker 的 leader(主节点)，不需要在多个节点进行分发，为了帮助 producer 做到这点，所有的 Kafka 节点都可以及时的告知:哪些节点是活动的，目标topic 目标分区的 leader 在哪。这样 producer 就可以直接将消息发送到目的地了.
 
-帮助 producer 做到这点，所有的 Kafka 节点都可以及时的告知:哪些节点是活动的，目标
+# 8、Kafa consumer 是否可以消费指定分区消息？
 
-topic 目标分区的 leader 在哪。这样 producer 就可以直接将消息发送到目的地了
+Kafa consumer 消费消息时，向 broker 发出"fetch"请求去消费特定分区的消息，consume指定消息在日志中的偏移量（offset），就可以消费从这个位置开始的消息，customer 拥有了 offset 的控制权，可以向后回滚去重新消费之前的消息，这是很有意义。
 
-**5、Kafa consumer 是否可以消费指定分区消息？**
+# 9、Kafka 消息是采用 Pull 模式，还是 Push 模式？****producer 将消息推送到 broker，consumer 从 broker 拉取消息**
 
-Kafa consumer 消费消息时，向 broker 发出"fetch"请求去消费特定分区的消息，consumer
-
-指定消息在日志中的偏移量（offset），就可以消费从这个位置开始的消息，customer 拥有
-
-了 offset 的控制权，可以向后回滚去重新消费之前的消息，这是很有意义的
-
-**6、Kafka 消息是采用 Pull 模式，还是 Push 模式？**
-
-Kafka 最初考虑的问题是，customer 应该从 brokes 拉取消息还是 brokers 将消息推送到
-
-consumer，也就是 pull 还 push。在这方面，Kafka 遵循了一种大部分消息系统共同的传统
-
-的设计：producer 将消息推送到 broker，consumer 从 broker 拉取消息
-
-一些消息系统比如 Scribe 和 Apache Flume 采用了 push 模式，将消息推送到下游的
-
-consumer。这样做有好处也有坏处：由 broker 决定消息推送的速率，对于不同消费速率的
+一些消息系统比如 Scribe 和 **Apache Flume 采用了 push 模式，将消息推送到下游的consumer**。这样做有好处也有坏处：由 broker 决定消息推送的速率，对于不同消费速率的
 
 consumer 就不太好处理了。消息系统都致力于让 consumer 以最大的速率最快速的消费消
 
@@ -268,17 +274,6 @@ request.required.acks 有三个值 0 1 -1
 Key 是由生产者发送数据传入
 
 所以生产者（key）决定了数据产生到集群的哪个 partition
-
-
-
-
-
-1. 引入消息队列之后如何保证高可用性？
-2. 如何保证消息不被重复消费呢？
-3. 如何保证消息的可靠性传输（如何处理消息丢失的问题）？
-4. 我该怎么保证从消息队列里拿到的数据按顺序执行？
-5. 如何解决消息队列的延时以及过期失效问题？消息队列满了以后该怎么处理？有几百万消息持续积压几小时，说说怎么解决？
-6. 如果让你来开发一个消息队列中间件，你会怎么设计架构？
 
 
 

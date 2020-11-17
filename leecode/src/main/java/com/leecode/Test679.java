@@ -39,7 +39,7 @@ public class Test679 {
             int a = nums.remove(0);
             int b = nums.remove(1);
 
-            return a*b + cal(nums.add())
+            return 0;
         }
 
 

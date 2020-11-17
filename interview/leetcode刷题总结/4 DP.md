@@ -2095,7 +2095,7 @@ class Solution {
 
 先来阐述简单共识
 
- ![image.png](https://pic.leetcode-cn.com/8c4bf78cf6396c40291e40c25d34ef56bd524313c2aa863f3a20c1f004f32ab0-image.png) 
+ ![image.png](4 DP.assets/8c4bf78cf6396c40291e40c25d34ef56bd524313c2aa863f3a20c1f004f32ab0-image.png) 
 
 若形成正方形（非单 1），以当前为右下角的视角看，则需要：当前格、上、左、左上都是 1
 可以换个角度：当前格、上、左、左上都不能受 0 的限制，才能成为正方形

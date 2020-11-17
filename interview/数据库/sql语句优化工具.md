@@ -107,15 +107,15 @@ select * from emp where empno=413345;
 
 ![微信图片_20200831005847](C:\Users\chen\Desktop\微信图片_20200831005847.png)
 
-可以看到，explain命令的结果一共有以下几列：id, select_type, table, type, possible_keys, key, key_len, ref, rows, Extra
+## 0 explain命令的结果比较关键字段
 
-![img](https://pics7.baidu.com/feed/8694a4c27d1ed21b07e77eea5eb5afc150da3ff7.png?token=6c4930d7a741abe9640293af70b47a5d&s=5EAA3463119FC1CE4AD5E1DB0300C0B1)
+![img](sql语句优化工具.assets/8694a4c27d1ed21b07e77eea5eb5afc150da3ff7.png)
 
 # 1 id：SELECT识别符。
 
  查询序号即为sql语句执行顺序 ，从 2 个表中查询，对应输出 2 行，每行对应一个表， id 列表示执行顺序，id 越大，越先执行，id 相同时，由上至下执行 
 
-![1598807213757](C:\Users\chen\AppData\Roaming\Typora\typora-user-images\1598807213757.png)
+![1598807213757](sql语句优化工具.assets/1598807213757.png)
 
    # 2 select_type：查询类型
 
@@ -129,7 +129,7 @@ select * from emp where empno=413345;
 `EXPLAIN ``SELECT` `* ``FROM` `person;`
 ```
 
-![img](https://images2017.cnblogs.com/blog/1284211/201801/1284211-20180112114322207-2091487127.png)
+![img](sql语句优化工具.assets/1284211-20180112114322207-2091487127.png)
 
 #### 　2.2 primary 最外层查询 (在存在子查询的语句中，最外面的select查询就是primary)
 
