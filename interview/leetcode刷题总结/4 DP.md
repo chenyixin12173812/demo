@@ -1229,6 +1229,106 @@ class Solution {
 }
 ```
 
+
+
+#### [面试题 01.05. 一次编辑](https://leetcode-cn.com/problems/one-away-lcci/)（能用上面的dp，不是最优）
+
+字符串有三种编辑操作:插入一个字符、删除一个字符或者替换一个字符。 给定两个字符串，编写一个函数判定它们是否只需要一次(或者零次)编辑。
+
+ 
+
+**示例 1:**
+
+```
+输入: 
+first = "pale"
+second = "ple"
+输出: True
+```
+
+ 
+
+**示例 2:**
+
+```
+输入: 
+first = "pales"
+second = "pal"
+输出: False
+```
+
+```java
+class Solution {
+    public boolean oneEditAway(String first, String second) {
+      if(first.equals(second)) {
+          return true;
+      }
+      int len1= first.length();
+      int len2 = second.length();
+      if(Math.abs(len1-len2)>1) {
+          return false;
+      } 
+
+      int dp[][] = new int [len1+1][len2+1];
+      for(int i=0;i<len1;i++) {
+          dp[i][0] =i;
+      } 
+      for(int j=0;j<len2;j++) {
+          dp[0][j] =j;
+      }
+      for(int i =0;i<len1;i++) {
+         for(int j =0;j<len2;j++) {
+            if(first.charAt(i)==second.charAt(j)) {
+                dp[i+1][j+1] = dp[i][j];
+            } else {
+                dp[i+1][j+1] = Math.min(dp[i+1][j]+1,Math.min(dp[i][j+1]+1,dp[i][j]+1));
+            }
+         } 
+
+      }
+       return dp[len1][len2]<=1;
+    }
+}
+
+
+//双指针方法 真牛逼
+
+class Solution {
+    public boolean oneEditAway(String first, String second) {
+
+        
+        if (first.equals(second)) {
+            return true;
+        }
+        if (Math.abs(first.length() - second.length()) > 1) {
+            return false;
+        }
+        int i = 0;
+        int len1 = first.length();
+        int len2 = second.length();
+        int j = first.length() - 1;
+        int k = second.length() - 1;
+        while (i < len1 && i < len2 && first.charAt(i) == second.charAt(i)) {
+            i++;
+        }
+        while (j >= 0 && k >= 0 && first.charAt(j) == second.charAt(k)) {
+            j--;
+            k--;
+        }
+        return j - i < 1 && k - i < 1;
+    
+    
+    }
+}
+
+```
+
+
+
+
+
+
+
 # 15 
 
 # 16 

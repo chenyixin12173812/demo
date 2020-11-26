@@ -40,6 +40,8 @@ public class Test165 {
            }
        }
        private int campare(int a) {
+
+           boolean x = true^true;
            return Integer.compare(a, 0);
        }
 
