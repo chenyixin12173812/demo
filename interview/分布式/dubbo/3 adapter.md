@@ -51,10 +51,6 @@
 
 ## 2.1 javassist生成动态类
 
-
-
-
-
 ## 2.2 jdk
 
 # 2.3 dubbo选择  javassist 原因

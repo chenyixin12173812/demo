@@ -10,7 +10,7 @@
 
 官方时序图：
 
-![/dev-guide/images/dubbo-export.jpg](http://dubbo.apache.org/docs/zh-cn/dev/sources/images/dubbo-export.jpg)
+ ![/dev-guide/images/dubbo-export.jpg](4 dubbo 服务导出.assets/b68b2b7d0cf440cc66ba37c64d86aace.png) 
 
 # 0 入口
 

@@ -1,10 +1,4 @@
-# 1 SPI
-
-
-
-# 1.使用区别
-
-1 原生spi
+# 1 java原生spi
 
  META-INF/services 文件夹下创建一个文件，名称为 Robot 的全限定名 org.apache.spi.Robot文件。文件内容为实现类的全限定的类名，如下：
 
@@ -72,9 +66,9 @@ dubbo在原来的基础上设计了以下功能
 dubbo spi 的目的：获取一个指定实现类的对象。
 途径：ExtensionLoader.getExtension(String name)
 实现路径：
-getExtensionLoader(Class<T> type) 就是为该接口new 一个ExtensionLoader，然后缓存起来，类似spring容器。
-getAdaptiveExtension() 编译生成，获取一个扩展类，如果@Adaptive注解在类上就是一个装饰类；如果注解在方法上就是一个动态代理类，例如Protocol$Adaptive对象。
-getExtension(String name) 获取一个指定对象，并完成ioc。
+ 1 **getExtensionLoader**(Class<T> type) 就是为该接口new 一个ExtensionLoader，然后缓存起来，类似spring容器。
+2 **getAdaptiveExtension**() 编译生成，获取一个扩展类，如果@Adaptive注解在类上就是一个装饰类；如果注解在方法上就是一个动态代理类，例如Protocol$Adaptive对象。
+3 **getExtension**(String name) 获取一个指定对象，并完成ioc。
 
 # 4 Dubbo SPI 源码
 
@@ -592,25 +586,4 @@ public class ProtocolFilterWrapper implements Protocol {
 1. instance = injectExtension((T) wrapperClass.getConstructor(type).newInstance(instance)); 就是将拿到的instance放到一个包装类中，然后经过一层包装之后，在放到另外一个包装类中， 
    **通过这种方式dubbo实现了扩展点的AOP**，其实是简单的warp功能。
 
-​          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-​       
-
-​       
+​        

@@ -16,9 +16,9 @@
 
 BeanDefiniton数据结构如下图:
 
-![BeanDefinition数据结构](G:/src/spring-analysis/note/images/BeanDefinition.jpg)
+![BeanDefinition数据结构](spring-base.assets/BeanDefinition.jpg)
 
-![1593357957670](C:\Users\chen\AppData\Roaming\Typora\typora-user-images\1593357957670.png)
+![1593357957670](spring-base.assets/1593357957670.png)
 
 ### 1.1.2 AbstractBeanDefinition
 
@@ -125,17 +125,9 @@ BeanDefiniton数据结构如下图:
 
 ## 1.2 BeanDefinitionParser
 
-![1594311524470](C:\Users\chen\AppData\Roaming\Typora\typora-user-images\1594311524470.png)
+![1594311524470](spring-base.assets/1594311524470.png)
 
 所有解析器都继承BeanDefinitionParser接口,
-
-
-
-
-
-
-
-
 
 
 
@@ -145,28 +137,56 @@ All Known Implementing Classes:
 
 [AbstractApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/context/support/AbstractApplicationContext.html), [AbstractRefreshableApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/context/support/AbstractRefreshableApplicationContext.html), [AbstractRefreshableConfigApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/context/support/AbstractRefreshableConfigApplicationContext.html), [AbstractRefreshableWebApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/web/context/support/AbstractRefreshableWebApplicationContext.html), [AbstractXmlApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/context/support/AbstractXmlApplicationContext.html), [AnnotationConfigApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/context/annotation/AnnotationConfigApplicationContext.html), [AnnotationConfigWebApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/web/context/support/AnnotationConfigWebApplicationContext.html), [ClassPathXmlApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/context/support/ClassPathXmlApplicationContext.html), [FileSystemXmlApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/context/support/FileSystemXmlApplicationContext.html), [GenericApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/context/support/GenericApplicationContext.html), [GenericGroovyApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/context/support/GenericGroovyApplicationContext.html), [GenericWebApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/web/context/support/GenericWebApplicationContext.html), [GenericXmlApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/context/support/GenericXmlApplicationContext.html), [GroovyWebApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/web/context/support/GroovyWebApplicationContext.html), [ResourceAdapterApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/jca/context/ResourceAdapterApplicationContext.html), [StaticApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/context/support/StaticApplicationContext.html), [StaticWebApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/web/context/support/StaticWebApplicationContext.html), [XmlWebApplicationContext](https://docs.spring.io/spring/docs/5.3.0-SNAPSHOT/javadoc-api/org/springframework/web/context/support/XmlWebApplicationContext.html)
 
-![1591714935108](C:\Users\chen\AppData\Roaming\Typora\typora-user-images\1591714935108.png)
+![1591714935108](spring-base.assets/1591714935108.png)
 
-最顶层接口，通过继承BeanFactory接口的方法，定义了与BeanFactory的关联绑定，以及其他功能组件，如Environment，MessageSource等的关联。
-ApplicationContext是bean容器的一个运行环境，而实际的bean容器为内部绑定的BeanFactory，由BeanFactory来存放bean的元数据beanDefinitions，具体存放在BeanFactory的实现类的一个类型为ConcurrentHashMap的map中，其中key为beanName，value为BeanDefinition；以及bean实例的创建。
+```java
+public interface ApplicationContext extends EnvironmentCapable, ListableBeanFactory, HierarchicalBeanFactory,
+		MessageSource, ApplicationEventPublisher, ResourcePatternResolve
+```
 
-用于访问应用程序组件的Bean工厂方法。继承自ListableBeanFactory。
+最顶层接口，通过继承BeanFactory接口的方法，定义了与BeanFactory的关联绑定，以及其他功能组件，
 
-以通用方式加载文件资源的能力。从ResourceLoader接口继承。
+如
 
-向注册的侦听器发布事件的能力。从ApplicationEventPublisher接口继承。
+1 ApplicationContext是bean容器的一个运行环境，而实际的bean容器为内部绑定的BeanFactory，由BeanFactory来存放bean的元数据beanDefinitions，具体存放在BeanFactory的实现类的一个类型为ConcurrentHashMap的map中，其中key为beanName，value为BeanDefinition；以及bean实例的创建。用于访问应用程序组件的Bean工厂方法。继承自ListableBeanFactory。
 
-能够解析消息，支持国际化。从MessageSource接口继承。
+2 EnvironmentCapable，-D 获得参数能力。
 
-从父上下文继承。子代上下文中的定义始终优先。例如，这意味着单个父上下文可以被整个web应用程序使用，而每个servlet都有自己的子上下文，独立于任何其他servlet。
+3 ListableBeanFactory
 
-<img src="G:\面试\spring\ApplicationContext1.png" alt="ApplicationContext1" style="zoom:200%;" />
+4 HierarchicalBeanFactory
+
+5 MessageSource 能够解析消息，支持国际化。从MessageSource接口继承。
+
+6 ApplicationEventPublisher向注册的侦听器发布事件的能力。从ApplicationEventPublisher接口继承
+
+7 以通用方式加载文件资源的能力。从ResourceLoader接口继承。
+
+ 从父上下文继承。子代上下文中的定义始终优先。例如，这意味着单个父上下文可以被整个web应用程序使用，而每个servlet都有自己的子上下文，独立于任何其他servlet。
+
+
+
+![ApplicationContext1](spring-base.assets/ApplicationContext1.png)
+
+ ![这里写图片描述](spring-base.assets/1b0746e00273bdd7ea50542729707ba7.png) 
+
+
+
+
+
+
+
+![AnnotationConfigWebApplicationContext](spring-base.assets/AnnotationConfigWebApplicationContext.png)
+
+
+
+
 
 ### 1.2.1 ConfigurableApplicationContext
 
 从ApplicationContext接口额外派生这个接口，而不是直接在ApplicationContext接口声明这些的原因：这些组件都是ApplicationContext接口的实现类在内部自身使用的，而ApplicationContext接口主要是定义对外的功能和方法声明，故在ConfigurableApplicationContext接口中声明这些方法，保证接口的清晰和职责的明确。SPI接口将由大多数（如果不是所有）应用程序上下文实现。除了application context接口中的应用程序上下文客户端方法之外，还提供配置应用程序上下文的工具。这里封装了配置和生命周期方法，以避免让ApplicationContext客户端代码看到它们。当前方法只能由启动和关闭代码使用。
 
-![](G:\面试\spring\ApplicationContext.png)
+
 
 ### 1.2.2 AbstractApplicationContext抽象类
 
@@ -252,7 +272,7 @@ root WebApplicationContext：即包含ROOT
 
  而ApplicationContext内部最重要的组件，就是BeanFactory体系结构，ApplicationContext通过BeanFactory来维护Spring容器所管理的类对应的BeanDefintions，通过BeanFactory来获取类对象bean。与BeanFactory配套的就是ApplicationContext维护多个BeanFactoryPostProcessor，BeanPostProcessor来对BeanFactory进行拓展，对BeanFactory自身或所创建的bean对象实例进行加工、功能拓展，实现整体设计的高拓展性。
 
- ![img](https://images0.cnblogs.com/blog/486074/201412/130947213849518.jpg) 
+ ![img](spring-base.assets/130947213849518.jpg) 
 
 ### 1.3.1BeanFactory
 
@@ -268,15 +288,15 @@ SpringBean容器的根接口，bean容器的基本客户机视图；其他接口
 
 与ListableBeanFactory中的方法相反，如果这是HierarchicalBeanFactory，则此接口中的所有操作也将检查父工厂。如果在此工厂实例中找不到bean，则会询问直接父工厂。这个工厂实例中的bean应该重写任何父工厂中同名的bean。
 
- ![è¿éåå¾çæè¿°](https://img-blog.csdn.net/20180626183406651?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTM0MTI3NzI=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70) 
+ ![è¿éåå¾çæè¿°](spring-base.assets/20180626183406651.png) 
 
 ### 1.3.2 ListableBeanFactory
 
-Spring 鼓励使用这个接口定义的api. 还有个`Beanfactory`方便使用.其他的4个接口都是不鼓励使用的.
+Spring 鼓励使用这个接口定义的api. 还有个`Beanfactory`方便使用.其他的4个接口都是不鼓励使用的.<font color=FF000>列表形式的，获得beanName是，beans 集合的</font>。
 
-提供容器中bean迭代的功能,不再需要一个个bean地查找.比如可以一次获取全部的bean(太暴力了),根据类型获取bean.在看SpringMVC时,扫描包路径下的具体实现策略就是使用的这种方式(那边使用的是`BeanFactoryUtils`封装的api).
+提供容器中bean迭代的功能,不再需要一个个bean地查找.比如可以一次获取全部的bean(太暴力了),根据类型获取bean.在看**SpringMVC时,扫描包路径下的具体实现策略就是使用的这种方式(那边使用的是`BeanFactoryUtils`封装的api).**
 
-如果同时实现了`HierarchicalBeanFactory`,返回值不会考虑父类`BeanFactory`,只考虑当前factory定义的类.当然也可以使用`BeanFactoryUtils`辅助类来查找祖先工厂中的类. **即`ListableBeanFactory`是`beanFactory`接口的扩展接口，它可以枚举所有的bean实例，而不是客户端通过名称一个一个的查询得出所有的实例。要预加载所有的bean定义的`beanfactory`可以实现这个接口来。该 接口定义了访问容器中Bean基本信息的若干方法，如查看Bean的个数、获取某一类型Bean的配置名、查看容器中是否包括某一Bean等方法.**
+如果同时实现了`HierarchicalBeanFactory`,返回值不会考虑父类`BeanFactory`,只考虑当前factory定义的类.当然也可以使用`BeanFactoryUtils`辅助类来查找祖先工厂中的类. <font color=FF000>**即`ListableBeanFactory`是`beanFactory`接口的扩展接口，它可以枚举所有的bean实例，而不是客户端通过名称一个一个的查询得出所有的实例。要预加载所有的bean定义的`beanfactory`可以实现这个接口来。该 接口定义了访问容器中Bean基本信息的若干方法，如查看Bean的个数、获取某一类型Bean的配置名、查看容器中是否包括某一Bean等方法.**</font>
 
 这个接口中的方法只会考虑本factory定义的bean.这些方法会忽略`ConfigurableBeanFactory`的`registerSingleton`注册的单例bean(getBeanNamesOfType和getBeansOfType是例外,一样会考虑手动注册的单例).当然`BeanFactory`的getBean一样可以透明访问这些特殊bean.当然在典型情况下,所有的bean都是由external bean定义,所以应用不需要顾虑这些差别.
 
@@ -296,7 +316,7 @@ ListableBeanFactory源码具体：
 
 ### 1.3.3  HierarchicalBeanFactory
 
-`HierarchicalBeanFactory` 提供父容器的访问功能.至于父容器的设置,需要找`ConfigurableBeanFactory`的`setParentBeanFactory`(接口把设置跟获取给拆开了!).
+**`HierarchicalBeanFactory` 提供父容器的访问功能**.至于父容器的设置,需要找`ConfigurableBeanFactory`的`setParentBeanFactory`(接口把设置跟获取给拆开了!).
 
 ------
 
@@ -310,7 +330,7 @@ HierarchicalBeanFactory源码具体：
 
 ### 1.3.4 ConfigurableBeanFactory
 
-- 继承于HierarchicalBeanFactory接口，主要提供对BeanFactory进行相关配置的接口，如类加载器classLoader，beanPostProcessor，类型转换器，属性编辑器等在加载、创建和初始化bean实例时，需要用到的一些功能组件；
+- 继承于HierarchicalBeanFactory接口，**主要提供对BeanFactory进行相关配置的接口，如类加载器classLoader，beanPostProcessor，类型转换器，属性编辑器等在加载、创建和初始化bean实例时，需要用到的一些功能组件；**
 
 `ConfigurableBeanFactory`定义`BeanFactory`的配置.`ConfigurableBeanFactory`中定义了太多太多的api,比如类加载器,类型转化,属性编辑器,`BeanPostProcessor`,作用域,bean定义,处理bean依赖关系,合并其他`ConfigurableBeanFactory`,bean如何销毁.
 
@@ -348,11 +368,13 @@ ConfigurableBeanFactory同时继承了HierarchicalBeanFactory 和 SingletonBeanR
 
  https://www.jianshu.com/p/14dd69b5c516 
 
- AutowireCapableBeanFactory是在BeanFactory的基础上实现对已存在实例的管理。可以使用这个接口集成其他框架，捆绑并填充并不由Spring管理生命周期并已存在的实例。 比如 serletContext，filter，等等web容器相关的。
+**比较重要的，与其他框架集成。**
+
+ AutowireCapableBeanFactory是在BeanFactory的基础上实现对已存在实例的管理。**可以使用这个接口集成其他框架，捆绑并填充并不由Spring管理生命周期并已存在的实例。 比如 serletContext，filter，等等web容器相关的。**
 
 ### 1.3.6 DefaultListableBeanFactory
 
-默认实现了**ListableBeanFactory和BeanDefinitionRegistry接口，基于bean definition对象，是一个成熟的bean factroy。BeanFactory接口体系的默认实现类，实现以上接口的功能，提供BeanDefinition的存储map，Bean对象对象的存储map。**
+默认实现了**ListableBeanFactory和BeanDefinitionRegistry接口，基于bean definition对象，是一个对立，可以直接使用的的bean factroy。BeanFactory接口体系的默认实现类，实现以上接口的功能，提供BeanDefinition的存储map，Bean对象对象的存储map。**
 
 其中Bean对象实例的存储map，定义在FactoryBeanRegistrySupport，FactoryBeanRegistrySupport实现了SingletonBeanRegistry接口，而DefaultListableBeanFactory的基类AbstractBeanFactory，继承于FactoryBeanRegistrySupport。
 
@@ -545,7 +567,7 @@ public interface BeanDefinitionRegistry extends AliasRegistry {
 
 ### 1.3.8 SingletonBeanRegistry、DefaultSingletonBeanRegistry与FactoryBeanRegistrySupport
 
- ![img](https://upload-images.jianshu.io/upload_images/13654428-ebe147bee096c34f.png?imageMogr2/auto-orient/strip|imageView2/2/w/1030/format/webp) 
+ ![img](spring-base.assets/13654428-ebe147bee096c34f.webp) 
 
 
 
@@ -579,9 +601,42 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 
 ### 1.3.9 bean元数据解析主入口：BeanDefinitionReader
 
-![1591886843530](C:\Users\chen\AppData\Roaming\Typora\typora-user-images\1591886843530.png)
+![1591886843530](spring-base.assets/1591886843530.png)
 
-从xml文件、属性文件，groovy文件，类路径下使用了@Component系列注解的类、或者从@Configuration注解的配置类，获取BeanDefintiions，然后注册到BeanFactory中。
+
+
+```java
+public interface BeanDefinitionReader {
+
+
+	BeanDefinitionRegistry getRegistry();
+
+
+	@Nullable
+	ResourceLoader getResourceLoader();
+
+
+	@Nullable
+	ClassLoader getBeanClassLoader();
+
+	BeanNameGenerator getBeanNameGenerator();
+
+	int loadBeanDefinitions(Resource resource) throws BeanDefinitionStoreException;
+
+
+	int loadBeanDefinitions(Resource... resources) throws BeanDefinitionStoreException;
+
+
+	int loadBeanDefinitions(String location) throws BeanDefinitionStoreException;
+
+	int loadBeanDefinitions(String... locations) throws BeanDefinitionStoreException;
+
+}
+```
+
+依赖的resource 和 BeanDefinitionRegistry
+
+**xml文件、属性文件，groovy文件，类路径下使用了@Component系列注解的类、或者从@Configuration注解的配置类**，获取BeanDefintiions，然后注册到BeanFactory中。
 
 1. **XmlBeanDefinitionReader：**基于XML文件
 读取解析xml文件，通过Parser解析xml文件的标签。
@@ -654,7 +709,21 @@ ConfigurationClassPostProcessor，用于从BeanFactory中检测使用了@Configu
 2. 对bean元数据进行加工处理
 BeanDefinition属性填充、修改：在postProcessBeanFactory方法中，可以对beanFactory所包含的beanDefinitions的propertyValues和构造函数参数值进行修改，如使用PropertyPlaceHolderConfigurer来对BeanDefinition的propertyValues的占位符进行填充、赋值。或者使用PropertyResourceConfigurer获取config文件中属性，对BeanDefinitions的相关属性进行赋值或者值覆盖。
 
-### 1.3.20 bean对象后置处理器：BeanPostProcessor
+### 1.3.12 BeanDefinitionRegistry后置处理器 ： BeanDefinitionRegistryPostProcessor
+
+![1609531662899](spring-base.assets/1609531662899.png)
+
+
+
+BeanDefinitionRegistryPostProcessor继承于BeanFactoryPostProcessor
+
+```
+BeanDefinitionRegistryPostProcessor extends BeanFactoryPostProcessor
+```
+
+
+
+### 1.3.13 bean对象后置处理器：BeanPostProcessor
 
 Bean后置处理器：负责对已创建好的bean对象进行加工处理。
 
@@ -671,7 +740,7 @@ public interface BeanPostProcessor {
 }
 ```
 
- ![img](https://upload-images.jianshu.io/upload_images/13150128-bb5c9389cd0acc6c.png?imageMogr2/auto-orient/strip|imageView2/2/w/844/format/webp) 
+ ![img](spring-base.assets/13150128-bb5c9389cd0acc6c.webp) 
 
 
 
@@ -690,6 +759,14 @@ AutowiredAnnotationBeanPostProcessor：处理bean对象的依赖注入关系，�
 CommonAnnotationBeanPostProcessor：该bean中所使用了的JDK定义的注解的处理，如方法中的@PostConstruct，@PreDestroy，成员变量上的@Resource等。
 
 PersistenceAnnotationBeanPostProcessor（JPA时添加）：JPA相关bean的持久化处理。
+
+
+
+
+
+
+
+
 
 ## 1.4 Spring Aop
 

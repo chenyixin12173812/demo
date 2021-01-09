@@ -1876,3 +1876,19 @@ list还有个指令叫`blpop`，在没有消息的时候，它会阻塞住直到
 
 # 39 Redis sharding
 
+
+
+# 40 AOF文件过大
+
+执行**BGREWRITEAOF**命令对redis的AOF进行重写
+
+(1) 随着AOF文件越来越大，里面会有大部分是重复命令或者可以合并的命令（100次incr = set key 100）
+(2) 重写的好处：减少AOF日志尺寸，减少内存占用，加快数据库恢复时间。
+
+执行一个 AOF文件重写操作，重写会创建一个当前 AOF 文件的体积优化版本。
+即使 BGREWRITEAOF 执行失败，也不会有任何数据丢失，因为旧的 AOF 文件在 BGREWRITEAOF 成功之前不会被修改。
+从 Redis 2.4 开始，AOF 重写由 Redis 自行触发， BGREWRITEAOF 仅仅用于手动触发重写操作。但网上有网友说已经3.2.5版本了，貌似redis还是没有自动触发BGREWRITEAOF
+稳妥的方法还写一个**脚本每天定时去执**
+
+
+
