@@ -4588,9 +4588,9 @@ class Solution {
 
 ```
 
-##  5 [1423. 可获得的最大点数](https://leetcode-cn.com/problems/maximum-points-you-can-obtain-from-cards/)
+# 5 [1423. 可获得的最大点数](https://leetcode-cn.com/problems/maximum-points-you-can-obtain-from-cards/)
 
-难度中等41收藏分享切换为英文接收动态反馈
+ 
 
 几张卡牌 **排成一行**，每张卡牌都有一个对应的点数。点数由整数数组 `cardPoints` 给出。
 
@@ -4704,6 +4704,16 @@ class Solution {
 
 
  ```
+
+
+
+
+
+
+
+
+
+
 
 # 2 使用HashMap维护不是dp[]
 
