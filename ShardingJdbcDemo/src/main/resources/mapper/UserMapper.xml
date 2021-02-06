@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chenyixin.springboot.mapper.UserMapper">
+
+    <insert id="save" parameterType="com.chenyixin.springboot.entity.User">
+        INSERT INTO t_user(name,phone,email,sex,password)
+        VALUES
+        (
+        #{name},#{phone},#{email},#{sex},#{password}
+        )
+    </insert>
+
+    <insert id="batchSave">
+        INSERT INTO t_user(name,phone,email,sex,password)
+        VALUES
+        <foreach collection="users" separator="," item="user">
+        (
+        #{user.name},#{user.phone},#{user.email},#{user.sex},#{user.password}
+        )
+        </foreach>
+    </insert>
+
+    <select id="getByUserId" parameterType="long" resultType="com.chenyixin.springboot.entity.User">
+        select user_id userId,name,sex,phone,email,password,create_time createTime
+        from t_user
+        where user_id = #{id}
+    </select>
+
+    <select id="getByIds" parameterType="long" resultType="com.chenyixin.springboot.entity.User">
+        select user_id userId,name,sex,phone,email,password,create_time createTime
+        from t_user
+        where user_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getByName" resultType="com.chenyixin.springboot.entity.User">
+        select user_id userId,name,sex,phone,email,password,create_time createTime
+        from t_user
+        where name = #{name}
+    </select>
+
+</mapper>
