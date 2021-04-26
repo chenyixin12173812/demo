@@ -863,7 +863,7 @@ class Solution {
 
 [491. 递增子序列](https://leetcode-cn.com/problems/increasing-subsequences/)
 
-## 2.4 面试题 08.13. 堆箱子 
+## 2.4 面试题 08.13. 堆箱子  (LIS)
 
 堆箱子。给你一堆n个箱子，箱子宽 wi、深 di、高 hi。箱子不能翻转，将箱子堆起来时，下面箱子的宽度、高度和深度必须大于上面的箱子。实现一种方法，搭出最高的一堆箱子。箱堆的高度为每个箱子高度的总和。
 
@@ -1188,6 +1188,90 @@ class Solution {
 ```
 
 ## 2.11 140. 单词拆分 II（dp dfs trie）
+
+## 2.12 [1105. 填充书架](https://leetcode-cn.com/problems/filling-bookcase-shelves/)
+
+## 2 .13 1626. 无矛盾的最佳球队(LIS)
+
+假设你是球队的经理。对于即将到来的锦标赛，你想组合一支总体得分最高的球队。球队的得分是球队中所有球员的分数 **总和** 。
+
+然而，球队中的矛盾会限制球员的发挥，所以必须选出一支 **没有矛盾** 的球队。如果一名年龄较小球员的分数 **严格大于** 一名年龄较大的球员，则存在矛盾。同龄球员之间不会发生矛盾。
+
+给你两个列表 `scores` 和 `ages`，其中每组 `scores[i]` 和 `ages[i]` 表示第 `i` 名球员的分数和年龄。请你返回 **所有可能的无矛盾球队中得分最高那支的分数** 。
+
+ 
+
+**示例 1：**
+
+```
+输入：scores = [1,3,5,10,15], ages = [1,2,3,4,5]
+输出：34
+解释：你可以选中所有球员。
+```
+
+**示例 2：**
+
+```
+输入：scores = [4,5,6,5], ages = [2,1,2,1]
+输出：16
+解释：最佳的选择是后 3 名球员。注意，你可以选中多个同龄球员。
+```
+
+**示例 3：**
+
+```
+输入：scores = [1,2,3,5], ages = [8,9,10,1]
+输出：6
+解释：最佳的选择是前 3 名球员。
+```
+
+```java
+class Solution {
+    public int bestTeamScore(int[] scores, int[] ages) {
+
+      int len = scores.length;
+
+      if(len ==1) {
+          return scores[0];
+      }
+
+      Integer scoresIn [] = new Integer [len];
+      for(int i =0;i<len;i++) {
+          scoresIn[i] = i;
+      }  
+      Arrays.sort(scoresIn,(a,b)->{
+       if(ages[a]-ages[b]!=0) {
+         return ages[a]-ages[b]; 
+       } else {
+         return  scores[a]-scores[b];
+       }
+      });
+      int dp[] = new int[len];
+     dp[0] = scores[scoresIn[0]];  
+      int max = scores[scoresIn[0]]; 
+      for(int i =1;i<len;i++) {
+        dp[i] = scores[scoresIn[i]];  
+        for(int j =i-1;j>=0;j--) {
+           if(scores[scoresIn[i]]>=scores[scoresIn[j]] ) {
+              dp[i] =Math.max(dp[i],  dp[j] + scores[scoresIn[i]]);
+           }
+        
+        } 
+
+        max = Math.max(max,dp[i]); 
+      }
+
+      return max; 
+
+    }
+}
+```
+
+
+
+
+
+
 
 
 
@@ -1814,7 +1898,33 @@ class Solution {
 解释: 在这种情况下, 没有交易完成, 所以最大利润为 0。
 
 ```java
-    class Solution {
+//贪心
+[7,1,5,3,6,4]
+// 3，6，4 3-6已经是最大值
+// 1，3，5 直接算 3-1 加上 5-3不影响
+class Solution {
+    public int maxProfit(int[] prices) { 
+     
+     int len = prices.length;
+     if(len<2) {
+         return 0;
+     }
+     int sum =0;
+     int pre = prices[0];
+     for(int i=1;i<len;i++) {
+         if(prices[i]>pre) {
+             sum += prices[i] -pre;
+         }  
+         pre = prices[i];  
+     }
+
+     return sum; 
+
+    }
+}
+
+
+class Solution {
         public int maxProfit(int[] prices) {
 
 
@@ -1880,6 +1990,45 @@ class Solution {
 输出: 0 
 解释: 在这个情况下, 没有交易完成, 所以最大利润为 0。
 
+```java
+public class Solution {
+
+    public int maxProfit(int[] prices) {
+        int len = prices.length;
+        if (len < 2) {
+            return 0;
+        }
+
+
+        int[][][] dp = new int[len][2][2];
+
+        dp[0][0][1] = -prices[0];
+
+        dp[0][1][1] = -prices[0];
+
+        for (int i = 1; i < len; i++) {
+
+            dp[i][0][1] = Math.max(dp[i - 1][0][1], -prices[i]);
+            dp[i][0][0] = Math.max(dp[i - 1][0][0], dp[i - 1][0][1] + prices[i]);
+            dp[i][1][1] = Math.max(dp[i - 1][1][1], dp[i - 1][0][0] - prices[i]);
+            dp[i][1][0] = Math.max(dp[i - 1][1][0], dp[i - 1][1][1] + prices[i]);
+        }
+        return Math.max(dp[len - 1][0][0], dp[len - 1][1][0]);
+    }
+}
+
+```
+
+
+
+
+
+
+
+
+
+
+
 ## 5.4 188. 买卖股票的最佳时机 IV
 
 给定一个数组，它的第 i 个元素是一支给定的股票在第 i 天的价格。
@@ -1899,6 +2048,90 @@ class Solution {
 输出: 7
 解释: 在第 2 天 (股票价格 = 2) 的时候买入，在第 3 天 (股票价格 = 6) 的时候卖出, 这笔交易所能获得利润 = 6-2 = 4 。
      随后，在第 5 天 (股票价格 = 0) 的时候买入，在第 6 天 (股票价格 = 3) 的时候卖出, 这笔交易所能获得利润 = 3-0 = 3 
+
+```java
+class Solution {
+    public int maxProfit(int k, int[] prices) {
+
+        int n = prices.length;
+
+        if (n<=1) return 0;
+        if (k<=0) return 0;
+
+        if (k>=n/2){
+
+            return greedyMethod(prices);
+        }
+
+
+
+        int dp[][][] = new int[n][k][2];
+
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < k; j++) {
+                dp[i][j][1] = -9999;
+            }
+        }
+
+        // 编写正确代码的方法：对两个"基本状态转移方程"当 i - 1 和 j - 1 分别越界的时候，做特殊判断，赋值为 0 即可
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < k; j++) {
+                if (i == 0) {
+                    dp[i][j][1] = -prices[0];
+                    dp[i][j][0] = 0;
+                } else {
+                    if (j == 0) {
+                        dp[i][j][1] = Math.max(dp[i - 1][j][1], -prices[i]);
+                    } else {
+                        // 基本状态转移方程 1
+                        dp[i][j][1] = Math.max(dp[i - 1][j][1], dp[i - 1][j - 1][0] - prices[i]);
+                    }
+                    // 基本状态转移方程 2
+                    dp[i][j][0] = Math.max(dp[i - 1][j][0], dp[i - 1][j][1] + prices[i]);
+                }
+            }
+        }
+
+
+
+
+        return dp[n-1][k-1][0];
+
+
+
+    }
+
+        int greedyMethod(int[] prices) {
+            int n = prices.length;
+
+            if (n <= 1) return 0;
+            int res =0;
+            for (int i =1 ;i<n;i++){
+                if (prices[i]-prices[i-1]>0){
+                    res += prices[i] -prices[i-1];
+                }
+
+            }
+            return res;
+
+        }
+
+
+
+
+}
+```
+
+
+
+
+
+
+
+
+
+
 
 ## 5.5 309. 最佳买卖股票时机含冷冻期 
 
@@ -2313,7 +2546,54 @@ class Solution {
 }
 ```
 
+## 5 .12 [801. 使序列递增的最小交换次数 DP\\[n\\]\\[Status\\]
 
+我们有两个长度相等且不为空的整型数组 A 和 B 。
+
+我们可以交换 A[i] 和 B[i] 的元素。注意这两个元素在各自的序列中应该处于相同的位置。
+
+在交换过一些元素之后，数组 A 和 B 都应该是严格递增的（数组严格递增的条件仅为A[0] < A[1] < A[2] < ... < A[A.length - 1]）。
+
+给定数组 A 和 B ，请返回使得两个数组均保持严格递增状态的最小交换次数。假设给定的输入总是有效的。
+
+示例:
+输入: A = [1,3,5,4], B = [1,2,3,7]
+输出: 1
+解释: 
+交换 A[3] 和 B[3] 后，两个数组如下:
+A = [1, 3, 5, 7] ， B = [1, 2, 3, 4]
+两个数组均为严格递增的。
+注意:
+
+A, B 两个数组的长度总是相等的，且长度的范围为 [1, 1000]。
+A[i], B[i] 均为 [0, 2000]区间内的整数。
+
+```java
+class Solution {
+    public int minSwap(int[] A, int[] B) {
+        // n: natural, s: swapped
+        int n1 = 0, s1 = 1;
+        for (int i = 1; i < A.length; ++i) {
+            int n2 = Integer.MAX_VALUE, s2 = Integer.MAX_VALUE;
+
+              if (A[i-1] < B[i] && B[i-1] < A[i]) {
+                n2 = Math.min(n2, s1);
+                s2 = Math.min(s2, n1 + 1);
+            }
+            // 不能是else if
+            if (A[i-1] < A[i] && B[i-1] < B[i]) {
+                n2 = Math.min(n2, n1);
+                s2 = Math.min(s2, s1 + 1);
+            }
+
+            n1 = n2;
+            s1 = s2;
+        }
+        return Math.min(n1, s1);
+    }
+}
+
+```
 
 
 
@@ -4076,7 +4356,106 @@ class Solution {
 
 # 5 区间动态规划（有点难，可能性小）
 
+区间DP挺难的，还好大多换汤不换药，多总结套路和模版才是王道！
+
 !(4 DP.assets/1607788477342.png)![1607788400925](4 DP.assets/1607788400925.png)
+
+
+
+
+
+
+
+https://leetcode-cn.com/problems/strange-printer/solution/yi-wen-tuan-mie-qu-jian-dp-by-bnrzzvnepe-24jz/  zhelei题目大全
+
+思想就是随着操作的进行，判断的范围越来越小，所以小长度开始遍历，逐步化解更大范围的问题，有分治的思想,先看下模版
+
+
+def helper(self, ns: List[int]) :
+    N = len(ns)
+    dp = [[0] * N for _ in range(N+1)]
+    for l in range(N): # 长度从小到大
+        for i in range(N-l): # 以 i 为 开头
+            j = i + l           # 以 j 为 终点
+            for k in range(i,j): # 以 k 为分割点，进行分治         
+                // Todo 业务逻辑 
+【medium 486 预测赢家】
+
+
+# 依赖于 前和下 从下到上和前到后 和从前到后从下到上
+# 也可以 长度从短到长，相当于斜着来 medium
+class Solution:
+    def PredictTheWinner(self, ns: List[int]) -> bool:
+        N = len(ns)
+        dp = [[0] * N for _ in range(N+1)]
+        for l in range(N): # 长度从小到大
+            for i in range(N-l): # 以 i 为 开头的，l 为长度
+                j = i + l           
+                dp[i][j]=max(ns[i]-dp[i+1][j], ns[j]-dp[i][j-1]) 
+        return dp[0][-1] >= 0
+【hard 312 戳气球】
+
+
+# 依赖于 全部的长度1 需要用k进行枚举，只能先长度后起始点，相当于 斜线遍历
+class Solution:
+    def maxCoins(self, ns: List[int]) -> int:
+        ns = [1] + ns + [1]
+        N = len(ns)
+        dp = [[0] * N for _ in range(N)] 
+        for l in range(N):
+            for i in range(N-l):
+                j = i + l 
+                for k in range(i+1,j):
+                    dp[i][j] = max(dp[i][j], \
+                        dp[i][k]+dp[k][j]+ns[i]*ns[k]*ns[j])
+        return dp[0][-1]
+【hard 664 奇怪的打印机】
+
+
+# 与 312思想基本一致，枚举 k 时加一层限制
+class Solution:
+    def strangePrinter(self, s: str) -> int:
+        if not s: return 0
+        N = len(s)
+        dp = [[0]*(N) for i in range(N+1)]
+        for l in range(N):     # 区间长度
+            for i in range(N-l):  # 区间起点
+                j = i + l            # 区间终点
+                dp[i][j] = dp[i+1][j] + 1 # 初始化
+                for k in range(i+1, j+1):   # 枚举分割点
+                    if s[k] == s[i]:    # 首位一样可减少一次
+                        dp[i][j] = min(dp[i][j], dp[i][k-1]+dp[k+1][j])
+        return dp[0][-1]
+【very hard 546 移除盒子】
+
+
+# 依赖于 全部的长度1 及 尾部状态
+class Solution:
+    def removeBoxes(self, bs: List[int]) -> int:
+        N = len(bs)
+        dp = [[[0]* (N+1) for _ in range(N+1)] for _ in range(N+1)]
+        for l in range(N):   # l++ 从小段 到 大段
+            for i in range(N-l): # i++ 起点 从小到大
+                j = i + l ;
+                for t in range(N-j): # 尾部tail 同数 从小 到 大
+                    dp[i][j][t]=max(dp[i][j][t],dp[i][j-1][0]+pow(t+1,2))
+                    for k in range(i,j) : # 枚举 分割点 k
+                        if bs[k] == bs[j]:
+                            dp[i][j][t]=max(dp[i][j][t],\
+                                dp[i][k][t+1]+dp[k+1][j-1][0])
+        return dp[0][N - 1][0]
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 5.1 312. 戳气球
 
@@ -4485,6 +4864,141 @@ class Solution {
     
     
 ```
+
+## 2.4 [754. 到达终点数字](https://leetcode-cn.com/problems/reach-a-number/)
+
+难度中等140收藏分享切换为英文接收动态反馈
+
+在一根无限长的数轴上，你站在`0`的位置。终点在`target`的位置。
+
+每次你可以选择向左或向右移动。第 n 次移动（从 1 开始），可以走 n 步。
+
+返回到达终点需要的最小移动次数。
+
+**示例 1:**
+
+```
+输入: target = 3
+输出: 2
+解释:
+第一次移动，从 0 到 1 。
+第二次移动，从 1 到 3 。
+```
+
+**示例 2:**
+
+```
+输入: target = 2
+输出: 3
+解释:
+第一次移动，从 0 到 1 。
+第二次移动，从 1 到 -1 。
+第三次移动，从 -1 到 2 。
+```
+
+```java
+
+// 与494 题目一样  假设 sum 存在 a+b =sum  a-b = target,则需要 sum》=target且(sum+target)%2==0。
+class Solution {
+    public int reachNumber(int target) {
+      target = Math.abs(target);
+      int cunt =0;
+      int sum =0;
+      for(int i=0;i<2*target;i++) {
+          sum +=i+1; 
+          if(sum>=target && (sum+target)%2==0) {
+                return cunt+1;
+          } 
+          cunt++;
+      }
+
+      return cunt; 
+
+    }
+}
+```
+
+
+
+
+
+
+
+
+
+## 2.5 [1049. 最后一块石头的重量 II](https://leetcode-cn.com/problems/last-stone-weight-ii/)
+
+难度中等134收藏分享切换为英文接收动态反馈
+
+有一堆石头，每块石头的重量都是正整数。
+
+每一回合，从中选出**任意两块石头**，然后将它们一起粉碎。假设石头的重量分别为 `x` 和 `y`，且 `x <= y`。那么粉碎的可能结果如下：
+
+- 如果 `x == y`，那么两块石头都会被完全粉碎；
+- 如果 `x != y`，那么重量为 `x` 的石头将会完全粉碎，而重量为 `y` 的石头新重量为 `y-x`。
+
+最后，最多只会剩下一块石头。返回此石头**最小的可能重量**。如果没有石头剩下，就返回 `0`。
+
+ 
+
+**示例：**
+
+```
+输入：[2,7,4,1,8,1]
+输出：1
+解释：
+组合 2 和 4，得到 2，所以数组转化为 [2,7,1,8,1]，
+组合 7 和 8，得到 1，所以数组转化为 [2,1,1,1]，
+组合 2 和 1，得到 1，所以数组转化为 [1,1,1]，
+组合 1 和 1，得到 0，所以数组转化为 [1]，这就是最优值。
+```
+
+## 2.5 879. 盈利计划
+
+难度困难45收藏分享切换为英文接收动态反馈
+
+集团里有 `n` 名员工，他们可以完成各种各样的工作创造利润。
+
+第 `i` 种工作会产生 `profit[i]` 的利润，它要求 `group[i]` 名成员共同参与。如果成员参与了其中一项工作，就不能参与另一项工作。
+
+工作的任何至少产生 `minProfit` 利润的子集称为盈利计划。并且工作的成员总数最多为 `n` 。
+
+有多少种计划可以选择？因为答案很大，所以 **返回结果模** `10^9 + 7` **的值**。
+
+ 
+
+**示例 1：**
+
+```
+输入：n = 5, minProfit = 3, group = [2,2], profit = [2,3]
+输出：2
+解释：至少产生 3 的利润，该集团可以完成工作 0 和工作 1 ，或仅完成工作 1 。
+总的来说，有两种计划。
+```
+
+**示例 2：**
+
+```
+输入：n = 10, minProfit = 5, group = [2,3,5], profit = [6,7,8]
+输出：7
+解释：至少产生 5 的利润，只要完成其中一种工作就行，所以该集团可以完成任何工作。
+有 7 种可能的计划：(0)，(1)，(2)，(0,1)，(0,2)，(1,2)，以及 (0,1,2) 。
+```
+
+ 
+
+**提示：**
+
+- `1 <= n <= 100`
+- `0 <= minProfit <= 100`
+- `1 <= group.length <= 100`
+- `1 <= group[i] <= 100`
+- `profit.length == group.length`
+- `0 <= profit[i] <= 100`
+
+通过次数1,890提交次数
+
+
 
 # 五 前缀和
 
@@ -4915,9 +5429,121 @@ class Solution {
 
 ```
 
+##  1.7 [1094. 拼车] 变种前缀和
 
+假设你是一位顺风车司机，车上最初有 `capacity` 个空座位可以用来载客。由于道路的限制，车 **只能** 向一个方向行驶（也就是说，**不允许掉头或改变方向**，你可以将其想象为一个向量）。
 
+这儿有一份乘客行程计划表 `trips[][]`，其中 `trips[i] = [num_passengers, start_location, end_location]` 包含了第 `i` 组乘客的行程信息：
 
+- 必须接送的乘客数量；
+- 乘客的上车地点；
+- 以及乘客的下车地点。
+
+这些给出的地点位置是从你的 **初始** 出发位置向前行驶到这些地点所需的距离（它们一定在你的行驶方向上）。
+
+请你根据给出的行程计划表和车子的座位数，来判断你的车是否可以顺利完成接送所有乘客的任务（当且仅当你可以在所有给定的行程中接送所有乘客时，返回 `true`，否则请返回 `false`）。
+
+ 
+
+**示例 1：**
+
+```
+输入：trips = [[2,1,5],[3,3,7]], capacity = 4
+输出：false
+```
+
+**示例 2：**
+
+```
+输入：trips = [[2,1,5],[3,3,7]], capacity = 5
+输出：true
+```
+
+**示例 3：**
+
+```
+输入：trips = [[2,1,5],[3,5,7]], capacity = 3
+输出：true
+```
+
+**示例 4：**
+
+```
+输入：trips = [[3,2,7],[3,7,9],[8,3,9]], capacity = 11
+输出：true
+```
+
+ 
+
+**提示：**
+
+- 你可以假设乘客会自觉遵守 “**先下后上**” 的良好素质
+- `trips.length <= 1000`
+- `trips[i].length == 3`
+- `1 <= trips[i][0] <= 100`
+- `0 <= trips[i][1] < trips[i][2] <= 1000`
+- `1 <= capacity <= 100000`
+
+```java
+class Solution {
+    public boolean carPooling(int[][] trips, int capacity) {
+     
+        int[] loadByTime = new int[1001];
+        for (int i = 0; i < trips.length; i++) {
+            loadByTime[trips[i][1]] += trips[i][0];
+            loadByTime[trips[i][2]] -= trips[i][0];
+        }
+
+        int load = 0;
+        for (int i = 0; i < loadByTime.length; i++) {
+            load += loadByTime[i];
+            if (load > capacity) {
+                return false;
+            }
+        }
+        return true;
+        }
+}
+```
+
+## 1.8 [1031. 两个非重叠子数组的最大和](https://leetcode-cn.com/problems/maximum-sum-of-two-non-overlapping-subarrays/)
+
+难度中等92收藏分享切换为英文接收动态反馈
+
+给出非负整数数组 `A` ，返回两个非重叠（连续）子数组中元素的最大和，子数组的长度分别为 `L` 和 `M`。（这里需要澄清的是，长为 L 的子数组可以出现在长为 M 的子数组之前或之后。）
+
+从形式上看，返回最大的 `V`，而 `V = (A[i] + A[i+1] + ... + A[i+L-1]) + (A[j] + A[j+1] + ... + A[j+M-1])` 并满足下列条件之一：
+
+ 
+
+- `0 <= i < i + L - 1 < j < j + M - 1 < A.length`, **或**
+- `0 <= j < j + M - 1 < i < i + L - 1 < A.length`.
+
+ 
+
+**示例 1：**
+
+```
+输入：A = [0,6,5,2,2,5,1,9,4], L = 1, M = 2
+输出：20
+解释：子数组的一种选择中，[9] 长度为 1，[6,5] 长度为 2。
+```
+
+**示例 2：**
+
+```
+输入：A = [3,8,1,3,2,1,8,9,0], L = 3, M = 2
+输出：29
+解释：子数组的一种选择中，[3,8,1] 长度为 3，[8,9] 长度为 2。
+```
+
+**示例 3：**
+
+```
+输入：A = [2,1,5,6,0,9,5,0,3,8], L = 4, M = 3
+输出：31
+解释：子数组的一种选择中，[5,6,0,9] 长度为 4，[0,3,8] 长度为 3。
+```
 
 
 
@@ -5115,7 +5741,7 @@ class Solution {
 
 ```
 
-## 2.4 327. 区间和的个数(最经典问题变种)
+## 2.4 327. 区间和的个数(最经典问题变种 SubMap)
 
 给定一个整数数组 nums，返回区间和在 [lower, upper] 之间的个数，包含 lower 和 upper。
 区间和 S(i, j) 表示在 nums 中，位置从 i 到 j 的元素之和，包含 i 和 j (i ≤ j)。
@@ -5371,6 +5997,115 @@ class Solution {
 - `1 <= s.length <= 5 x 10^5`
 - `s` 只包含小写英文字母。
 
+```java
+class Solution {
+    public int findTheLongestSubstring(String s) {
+
+    Map<Integer,Integer> map = new HashMap<>();
+    int status  =0;
+    map.put(status,-1); 
+    int len = 0;  
+    for(int i =0;i<s.length();i++) {
+      char c= s.charAt(i);
+      switch(c) {
+        case 'a':
+            status ^= 1<<0;
+            break;
+        case 'e':
+            status ^= 1<<1;
+            break;
+        case 'i':
+            status ^= 1<<2;
+            break;
+        case 'o':
+            status ^= 1<<3;
+            break;    
+        case 'u':
+            status ^= 1<<4;
+            break; 
+        default:
+          break;    
+      }
+      if(map.containsKey(status)) {
+          len = Math.max(len,i-map.get(status));
+      } else{
+          map.put(status,i);
+      }    
+     }
+      return len;
+    }
+    
+
+
+}
+```
+
+## 2.10 [1124. 表现良好的最长时间段](https://leetcode-cn.com/problems/longest-well-performing-interval/)(subMap)
+
+难度中等129收藏分享切换为英文接收动态反馈
+
+给你一份工作时间表 `hours`，上面记录着某一位员工每天的工作小时数。
+
+我们认为当员工一天中的工作小时数大于 `8` 小时的时候，那么这一天就是「**劳累的一天**」。
+
+所谓「表现良好的时间段」，意味在这段时间内，「劳累的天数」是严格 **大于**「不劳累的天数」。
+
+请你返回「表现良好时间段」的最大长度。
+
+ 
+
+**示例 1：**
+
+```
+输入：hours = [9,9,6,0,6,6,9]
+输出：3
+解释：最长的表现良好时间段是 [9,9,6]。
+```
+
+ 
+
+**提示：**
+
+- `1 <= hours.length <= 10000`
+- `0 <= hours[i] <= 16`
+
+```java
+class Solution {
+    public int longestWPI(int[] hours) {
+
+      int len = hours.length;
+      int res =0;
+      int sum=0;
+      int end =0; 
+      TreeMap<Integer,Integer> map = new TreeMap<>();
+      map.put(0,-1); 
+      while(end<len) {
+         if(hours[end]>8) {
+            sum++; 
+         } else{
+            sum--;  
+         }
+         if(!map.containsKey(sum)) {
+            // System.out.println(map.size()); 
+            map.put(sum,end);
+         }
+            for(int value: map.subMap(-len-1,true,sum-1,true).values()) {
+                  res = Math.max(res,end-value);
+            }
+         
+         end++;
+           
+      }
+
+      return res;  
+    }
+}
+
+
+
+
+```
+
 
 
 # 六 『n-m分配』类问题
@@ -5380,3 +6115,291 @@ class Solution {
 [1595. 连通两组点的最小成本](https://leetcode-cn.com/problems/minimum-cost-to-connect-two-groups-of-points/)
 
 #### 1434. 每个人戴不同帽子的方案数
+
+# 七 盖楼问题
+
+## 1 983. 最低票价
+
+在一个火车旅行很受欢迎的国度，你提前一年计划了一些火车旅行。在接下来的一年里，你要旅行的日子将以一个名为 `days` 的数组给出。每一项是一个从 `1` 到 `365` 的整数。
+
+火车票有三种不同的销售方式：
+
+- 一张为期一天的通行证售价为 `costs[0]` 美元；
+- 一张为期七天的通行证售价为 `costs[1]` 美元；
+- 一张为期三十天的通行证售价为 `costs[2]` 美元。
+
+通行证允许数天无限制的旅行。 例如，如果我们在第 2 天获得一张为期 7 天的通行证，那么我们可以连着旅行 7 天：第 2 天、第 3 天、第 4 天、第 5 天、第 6 天、第 7 天和第 8 天。
+
+返回你想要完成在给定的列表 `days` 中列出的每一天的旅行所需要的最低消费。
+
+ 
+
+**示例 1：**
+
+```
+输入：days = [1,4,6,7,8,20], costs = [2,7,15]
+输出：11
+解释： 
+例如，这里有一种购买通行证的方法，可以让你完成你的旅行计划：
+在第 1 天，你花了 costs[0] = $2 买了一张为期 1 天的通行证，它将在第 1 天生效。
+在第 3 天，你花了 costs[1] = $7 买了一张为期 7 天的通行证，它将在第 3, 4, ..., 9 天生效。
+在第 20 天，你花了 costs[0] = $2 买了一张为期 1 天的通行证，它将在第 20 天生效。
+你总共花了 $11，并完成了你计划的每一天旅行。
+```
+
+**示例 2：**
+
+```
+输入：days = [1,2,3,4,5,6,7,8,9,10,30,31], costs = [2,7,15]
+输出：17
+解释：
+例如，这里有一种购买通行证的方法，可以让你完成你的旅行计划： 
+在第 1 天，你花了 costs[2] = $15 买了一张为期 30 天的通行证，它将在第 1, 2, ..., 30 天生效。
+在第 31 天，你花了 costs[0] = $2 买了一张为期 1 天的通行证，它将在第 31 天生效。 
+你总共花了 $17，并完成了你计划的每一天旅行。
+```
+
+ 
+
+**提示：**
+
+1. `1 <= days.length <= 365`
+2. `1 <= days[i] <= 365`
+3. `days` 按顺序严格递增
+4. `costs.length == 3`
+5. `1 <= costs[i] <= 1000`
+
+```java
+
+class Solution {
+    int[] days, costs;
+    Integer[] memo;
+    int[] durations = new int[]{1, 7, 30};
+    public int mincostTickets(int[] days, int[] costs) {
+        this.days = days;
+        this.costs = costs;
+        memo = new Integer[days.length];
+        return dp(0);
+    }
+
+    public int dp(int i) {
+        if (i >= days.length) {
+            return 0;
+        }
+        if (memo[i] != null) {
+            return memo[i];
+        }
+        memo[i] = Integer.MAX_VALUE;
+        int j = i;
+        for (int k = 0; k < 3; ++k) {
+            while (j < days.length && days[j] < days[i] + durations[k]) {
+                j++;
+            }
+            memo[i] = Math.min(memo[i], dp(j) + costs[k]);
+        }
+        return memo[i];
+    }
+}
+
+```
+
+
+
+## 2 887. 鸡蛋掉落 （考过）
+
+你将获得 K 个鸡蛋，并可以使用一栋从 1 到 N  共有 N 层楼的建筑。
+
+每个蛋的功能都是一样的，如果一个蛋碎了，你就不能再把它掉下去。
+
+你知道存在楼层 F ，满足 0 <= F <= N 任何从高于 F 的楼层落下的鸡蛋都会碎，从 F 楼层或比它低的楼层落下的鸡蛋都不会破。
+
+每次移动，你可以取一个鸡蛋（如果你有完整的鸡蛋）并把它从任一楼层 X 扔下（满足 1 <= X <= N）。
+
+你的目标是确切地知道 F 的值是多少。
+
+无论 F 的初始值如何，你确定 F 的值的最小移动次数是多少？
+
+ 
+
+示例 1：
+
+输入：K = 1, N = 2
+输出：2
+解释：
+鸡蛋从 1 楼掉落。如果它碎了，我们肯定知道 F = 0 。
+否则，鸡蛋从 2 楼掉落。如果它碎了，我们肯定知道 F = 1 。
+如果它没碎，那么我们肯定知道 F = 2 。
+因此，在最坏的情况下我们需要移动 2 次以确定 F 是多少。
+示例 2：
+
+输入：K = 2, N = 6
+输出：3
+示例 3：
+
+输入：K = 3, N = 14
+输出：4
+
+
+
+
+
+# 八 “我能赢” “博弈”问题（也可以 极小化极大 ）
+
+两个零和博弈的题目：
+https://leetcode-cn.com/problems/stone-game-iii/
+https://leetcode-cn.com/problems/nim-game/
+
+
+
+## 1 486. 预测赢家 [877. 石子游戏](https://leetcode-cn.com/problems/stone-game/)
+
+给定一个表示分数的非负整数数组。 玩家 1 从数组任意一端拿取一个分数，随后玩家 2 继续从剩余数组任意一端拿取分数，然后玩家 1 拿，…… 。每次一个玩家只能拿取一个分数，分数被拿取之后不再可取。直到没有剩余分数可取时游戏结束。最终获得分数总和最多的玩家获胜。
+
+给定一个表示分数的数组，预测玩家1是否会成为赢家。你可以假设每个玩家的玩法都会使他的分数最大化。
+
+ 
+
+**示例 1：**
+
+```
+输入：[1, 5, 2]
+输出：False
+解释：一开始，玩家1可以从1和2中进行选择。
+如果他选择 2（或者 1 ），那么玩家 2 可以从 1（或者 2 ）和 5 中进行选择。如果玩家 2 选择了 5 ，那么玩家 1 则只剩下 1（或者 2 ）可选。
+所以，玩家 1 的最终分数为 1 + 2 = 3，而玩家 2 为 5 。
+因此，玩家 1 永远不会成为赢家，返回 False 。
+```
+
+**示例 2：**
+
+```
+输入：[1, 5, 233, 7]
+输出：True
+解释：玩家 1 一开始选择 1 。然后玩家 2 必须从 5 和 7 中进行选择。无论玩家 2 选择了哪个，玩家 1 都可以选择 233 。
+     最终，玩家 1（234 分）比玩家 2（12 分）获得更多的分数，所以返回 True，表示玩家 1 可以成为赢家。
+```
+
+ 
+
+**提示：**
+
+- 1 <= 给定的数组长度 <= 20.
+- 数组里所有分数都为非负数且不会大于 10000000 。
+- 如果最终两个玩家的分数相等，那么玩家 1 仍为赢家。
+
+```java
+
+// dp
+class Solution {
+    public boolean PredictTheWinner(int[] nums) {
+    int len = nums.length;
+    if(len<=2) {
+        return true;
+    }
+    int dp[][] = new int [len][len];
+    dp[0][0] =nums[0];
+    dp[0][1] = Math.max(nums[0],nums[1]) - Math.min(nums[0],nums[1]);
+    
+    for(int j=1;j<len;j++) {
+       dp[j][j] = nums[j]; 
+    for(int i =j-1;i>=0;i--) {
+        //必须选第一个 或第j个 -是b的得分
+        dp[i][j] =Math.max(nums[i] - dp[i+1][j] ,nums[j] - dp[i][j-1]); 
+      }
+    }
+
+
+    return dp[0][len-1]>=0;  
+
+    }
+}
+```
+
+首先，这题有一个标签是极小化极大（Minimax），带这个标签的题目并不多，但通常有一个范式：
+
+1. A，B轮流进行某种决策，且决策间是相互竞争关系。假定A先进行决策。
+2. A，B都符合理性人假设。更确切地说，每一次决策都会选出当前最优的方案（而不会在意已经做过的决策）。
+
+1和2共同反映了极小化极大（Minimax）的定义，即此消彼长——第一轮A决策极大化A自己的收益，同时间接极小化了B的收益；第二轮B则相反，如此往复；2间接确保了最优子结构的存在。仔细思考会发现这里面有一件事是重复进行的，那就是决策本身——决策者只有两个可能的决策，并且他会选择让自己优势最大化的那个。
+
+因此，方法1中过度强调的轮次（turn）的概念，其实是没有必要的。决策本身和轮次完全无关。A，B就是要从头尾两种决策中选出自己分数最大的一种，仅此而已。
+
+```java
+class Solution {
+    public boolean PredictTheWinner(int[] nums) {
+        return play(nums, 0, nums.length - 1) >= 0;
+    }
+
+    private int play(int[] nums, int lo, int hi) {
+        if (lo > hi) return 0;
+        int planA = nums[lo] - play(nums, lo + 1, hi);
+        int planB = nums[hi] - play(nums, lo, hi - 1);
+        return Math.max(planA, planB);
+    }
+}
+```
+
+##  2 [292. Nim 游戏](https://leetcode-cn.com/problems/nim-game/)
+
+## 3 464. 我能赢吗
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

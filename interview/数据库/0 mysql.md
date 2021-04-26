@@ -935,3 +935,31 @@ nnoDB存储引擎默认一个数据页大小为16kb，非叶子节点存放（ke
 
 ![img](https://imgconvert.csdnimg.cn/aHR0cHM6Ly9tbWJpei5xcGljLmNuL3N6X21tYml6X3BuZy9IVjR5VEk2UGpiSVM2YTVjT0xtaWJ3U1ZsUGZIZEtrbnBabUhINUFsUkhSZ2MwSDJvcjBmeDZramljSFRaeG1pYTZQdXJvN1pqbnV3ODN0cWdPQklmdGFaQS82NDA?x-oss-process=image/format,png)
 
+
+
+
+
+# 24 密集索引,稀疏索引,聚簇索引,二级索引
+
+- 密集索引:文件中的每个搜索码值都对应一个索引值,就是叶子节点保存了整行, innodb只有一个
+- 稀疏索引:文件只为索引码的某些值建立索引项, 比如 innodb的其他索引只存了键位信息和主键, myisam的所有索引都是
+- 聚簇索引：
+   表数据按顺序存储，即索引顺序和表记录物理存储顺序一致。
+   聚簇索引 叶子节点存储数据行和B-Tree索引。
+   在一个表中只能有一个聚簇索引，因为真实物理存储顺序只能有一种。
+
+在 InnoDB 中:
+ **表** 根据主键顺序以**B+ 树索引的形式存放**的,
+ 这种存储方式的表称为**索引**组织表
+
+- 主键索引(**聚簇索引**): 叶子节点存的是整行数据  是 **密集索引**
+- 非主键索引(**二级索引**): 叶子节点内容是主键的值, 是**稀疏索引**
+
+对MyISAM 来说, 主键索引和其他索引没有任何区别, 都是稀疏索引 , 表数据存储在独立的地方, 表数据和索引的分开的, 索引用地址指向表数据
+
+ 
+
+
+
+
+

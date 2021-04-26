@@ -1,85 +1,13 @@
 # 4 SQL优化与规范
 
-**一、 使用延迟查询优化 limit [offset], [rows]**
-
-经常出现类似以下的 SQL 语句:
-
-```
-SELECT * FROM film LIMIT 100000, 10
-```
-
-offset 特别大!
-
-这是我司出现很多慢 SQL 的**主要原因**之一，尤其是在跑任务需要分页执行时，经常跑着跑着 offset 就跑到几十万了，导致任务越跑越慢。
-
-LIMIT 能很好地解决分页问题，但如果 offset 过大的话，会造成严重的性能问题，原因主要是因为 MySQL 每次会把一整行都扫描出来，扫描 offset 遍，找到 offset 之后会抛弃 offset 之前的数据，再从 offset 开始读取 10 条数据，显然，这样的读取方式问题。
-
-可以通过**延迟查询**的方式来优化
-
-假设有以下 SQL,有组合索引（sex, rating）
-
-```
-SELECT <cols> FROM profiles where sex='M' order by rating limit 100000, 10;
-```
-
-则上述写法可以改成如下写法
-
-```
-SELECT <cols>   FROM profiles inner join(SELECT id form FROM profiles where x.sex='M' order by rating limit 100000, 10)as x using(id);
-```
-
-这里利用了覆盖索引的特性，先从覆盖索引中获取 100010 个 id，再丢充掉前 100000 条 id，保留最后 10 个 id 即可，丢掉 100000 条 id 不是什么大的开销，所以这样可以显著提升性能
-
-**二、 利用 LIMIT 1 取得唯一行**
-
-数据库引擎只要发现满足条件的一行数据则立即停止扫描，，这种情况适用于只需查找一条满足条件的数据的情况
-
-**三、 注意组合索引，要符合最左匹配原则才能生效**
-
-假设存在这样顺序的一个联合索引“col_1, col_2, col_3”。这时，指定条件的顺序就很重要。
-
-```
-○ SELECT * FROM SomeTable WHERE col_1 = 10 AND col_2 = 100 AND col_3 = 500;○ SELECT * FROM SomeTable WHERE col_1 = 10 AND col_2 = 100 ;× SELECT * FROM SomeTable WHERE col_2 = 100 AND col_3 = 500 ;
-```
-
-前面两条会命中索引，第三条由于没有先匹配 col_1，导致无法命中索引， 另外如果无法保证查询条件里列的顺序与索引一致，可以考虑将联合索引 拆分为多个索引。
-
-**四、使用 LIKE 谓词时，只有前方一致的匹配才能用到索引（最左匹配原则）**
-
-```
-× SELECT * FROM SomeTable WHERE col_1 LIKE '%a';× SELECT * FROM SomeTable WHERE col_1 LIKE '%a%';○ SELECT * FROM SomeTable WHERE col_1 LIKE 'a%';
-```
-
-上例中，只有第三条会命中索引，前面两条进行后方一致或中间一致的匹配无法命中索引
-
-**五、 简单字符串表达式**
-
-模型字符串可以使用 _ 时， 尽可能避免使用 %, 假设某一列上为 char(5)
-
-不推荐
-
-```
-SELECT     first_name,     last_name,    homeroom_nbr  FROM Students WHERE homeroom_nbr LIKE 'A-1%';
-```
-
-推荐
-
-```
-SELECT first_name, last_namehomeroom_nbr  FROM Students WHERE homeroom_nbr LIKE 'A-1__'; --模式字符串中包含了两个下划线
-```
-
-**六、尽量使用自增 id 作为主键**
-
-比如现在有一个用户表，有人说身份证是唯一的，也可以用作主键，理论上确实可以，不过用身份证作主键的话，一是占用空间相对于自增主键大了很多，二是很容易引起频繁的页分裂，造成性能问题（什么是页分裂，请参考[这篇文章](https://mp.weixin.qq.com/s?__biz=MzI5MTU1MzM3MQ==&mid=2247484006&idx=1&sn=3e15abeb5299a3e9b578332dd8565273&scene=21#wechat_redirect)）
-
-主键选择的几个原则：自增，尽量小，不要对主键进行修改
+ 
 
 **七、如何优化 count(\*)**
 
 使用以下 sql 会导致慢查询
 
 ```
-SELECT COUNT(*) FROM SomeTableSELECT COUNT(1) FROM SomeTable
+SELECT COUNT(*) FROM SomeTable SELECT COUNT(1) FROM SomeTable
 ```
 
 原因是会造成全表扫描，有人说 **COUNT(\*)** 不是会利用主键索引去查找吗，怎么还会慢，这就要谈到 MySQL 中的聚簇索引和非聚簇索引了，聚簇索引叶子节点上存有主键值+整行数据，非聚簇索叶子节点上则存有辅助索引的列值 + 主键值，如下
@@ -102,61 +30,7 @@ SELECT MAX(id) FROM SomeTable
 
 说句题句话，有人说用 MyISAM 引擎调用 COUNT(*) 非常快，那是因为它提前把行数存在磁盘中了，直接拿，当然很快，不过如果有 WHERE 的限制,用 COUNT(*) 还是很慢!
 
-**八、避免使用 SELECT \* ，尽量利用覆盖索引来优化性能**
-
-**SELECT \*** 会提取出一整行的数据，如果查询条件中用的是组合索引进行查找，还会导致回表（先根据组合索引找到叶子节点，再根据叶子节点上的主键回表查询一整行），降低性能，而如果我们所要的数据就在组合索引里，只需读取组合索引列，这样网络带宽将大大减少,假设有组合索引列 (col_1, col_2)
-
-推荐用
-
-```
-SELECT col_1, col_2   FROM SomeTable  WHERE col_1 = xxx AND col_2 = xxx
-```
-
-不推荐用
-
-```
-SELECT *  FROM SomeTable  WHERE col_1 = xxx AND  col_2 = xxx
-```
-
-**九、 如有必要，使用 force index() 强制走某个索引**
-
-业务团队曾经出现类似以下的慢 SQL 查询
-
-```
-SELECT *  FROM  SomeTable WHERE `status` = 0   AND `gmt_create` > 1490025600   AND `gmt_create` < 1490630400   AND `id` > 0   AND `post_id` IN ('67778', '67811', '67833', '67834', '67839', '67852', '67861', '67868', '67870', '67878', '67909', '67948', '67951', '67963', '67977', '67983', '67985', '67991', '68032', '68038'/*... omitted 480 items ...*/)order by id asc limit 200;
-```
-
-post_id 也加了索引，理论上走 post_id 索引会很快查询出来，但实际通过 EXPLAIN 发现走的却是 id 的索引（这里隐含了一个常见考点，在多个索引的情况下, MySQL 会如何选择索引），而 id > 0 这个查询条件没啥用，直接导致了全表扫描， 所以在有多个索引的情况下一定要慎用，可以使用 force index 来强制走某个索引，以这个例子为例，可以强制走 post_id 索引，效果立杆见影。
-
-这种由于表中有多个索引导致 MySQL 误选索引造成慢查询的情况在业务中也是非常常见，一方面是表索引太多，另一方面也是由于 SQL 语句本身太过复杂导致， 针对本例这种复杂的 SQL 查询，其实用 ElasticSearch 搜索引擎来查找更合适，有机会到时出一篇文章说说。
-
-**十、 使用 EXPLAIN 来查看 SQL 执行计划**
-
-上个点说了，可以使用 EXPLAIN 来分析 SQL 的执行情况，如怎么发现上文中的最左匹配原则不生效呢，执行 「EXPLAIN + SQL 语句」可以发现 key 为 None ,说明确实没有命中索引
-
-![img](https://mmbiz.qpic.cn/mmbiz_png/OyweysCSeLVPRT96ibyqu1hv2bWgRLSSKbDbWW79uenM9WiboG2k6YCRm2KAaK3aR9V8qO7KwqWQjsiaG4yXUqthw/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
-
-我司在提供 SQL 查询的同时，也贴心地加了一个 EXPLAIN 功能及 sql 的优化建议，建议各大公司效仿 ^_^,如图示
-
-![img](https://mmbiz.qpic.cn/mmbiz_png/OyweysCSeLVPRT96ibyqu1hv2bWgRLSSKNld8nRtxYbicFPexs6icA4RqKVnbiaQ49HBFEjzic6ibUXtvvNuSqMU0BxA/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
-
-**十一、 批量插入，速度更快**
-
-当需要插入数据时，批量插入比逐条插入性能更高
-
-推荐用
-
-```
--- 批量插入INSERT INTO TABLE (id, user_id, title) VALUES (1, 2, 'a'),(2,3,'b');
-```
-
-不推荐用
-
-```
-INSERT INTO TABLE (id, user_id, title) VALUES (1, 2, 'a');INSERT INTO TABLE (id, user_id, title) VALUES (2,3,'b');
-```
-
-批量插入 SQL 执行效率高的主要原因是合并后日志量 MySQL 的 binlog 和 innodb 的事务让日志减少了，降低日志刷盘的数据量和频率，从而提高了效率
+ 
 
 **十二、 慢日志 SQL 定位**
 
@@ -238,15 +112,7 @@ SELECT item_no FROM Items IWHERE EXISTS         (SELECT *           FROM SalesHi
 
 既用到了索引，又避免了排序对性能的损耗。
 
-**二、在极值函数中使用索引（MAX/MIN）**
-
-使用 MAX/ MIN 都会对进行排序，如果参数字段上没加索引会导致全表扫描，如果建有索引，则只需要扫描索引即可，对比如下
-
-```
--- 这样写需要扫描全表 SELECT MAX(item)  FROM Items;-- 这样写能用到索引 SELECT MAX(item_no)  FROM Items;
-```
-
-注意：极值函数参数推荐为索引列中并不是不需要排序，而是优化了排序前的查找速度（毕竟索引本身就是有序排列的）。
+ 
 
 **三、能写在 WHERE 子句里的条件不要写在 HAVING 子句里**
 
@@ -265,55 +131,13 @@ SELECT item_no FROM Items IWHERE EXISTS         (SELECT *           FROM SalesHi
 
 GROUP BY 子句和 ORDER BY 子句一般都会进行排序，以对行进行排列和替换，不过如果指定带有索引的列作为这两者的参数列，由于用到了索引，可以实现高速查询，由于索引是有序的，排序本身都会被省略掉
 
-**五、使用索引时，条件表达式的左侧应该是原始字段**
+ 
 
-假设我们在 col 列上建立了索引，则下面这些 SQL 语句无法用到索引
+ 
 
-```
-SELECT *  FROM SomeTable WHERE col * 1.1 > 100;SELECT *  FROM SomeTable WHERE SUBSTR(col, 1, 1) = 'a';
-```
 
-以上第一个 SQL 在索引列上进行了运算, 第二个 SQL 对索引列使用了函数，均无法用到索引，正确方式是把列单独放在左侧,如下:
 
-```
-SELECT *  FROM SomeTable WHERE col_1 > 100 / 1.1;
-```
-
-当然如果需要对此列使用函数，则无法避免在左侧运算，可以考虑使用函数索引，不过一般不推荐随意这么做。
-
-**六、尽量避免使用否定形式**
-
-如下的几种否定形式不能用到索引：
-
-- <>
-- !=
-- NOT IN
-
-所以以下 了SQL 语句会导致全表扫描
-
-```
-SELECT *  FROM SomeTable WHERE col_1 <> 100;
-```
-
-可以改成以下形式
-
-```
-SELECT *  FROM SomeTable WHERE col_1 > 100 or col_1 < 100;
-```
-
-**七、进行默认的类型转换**
-
-假设 col 是 char 类型，则推荐使用以下第二，三条 SQL 的写法，不推荐第一条 SQL 的写法
-
-```
-× SELECT * FROM SomeTable WHERE col_1 = 10;○ SELECT * FROM SomeTable WHERE col_1 = '10';○ SELECT * FROM SomeTable WHERE col_1 = CAST(10, AS CHAR(2));
-```
-
-虽然第一条 SQL 会默认把 10 转成 '10'，但这种默认类型转换不仅会增加额外的性能开销，还会导致索引不可用，所以建议使用的时候进行类型转换。
-
-**八、减少中间表**
-
-在 SQL 中，子查询的结果会产生一张新表，不过如果不加限制大量使用中间表的话，会带来两个问题，一是展示数据需要消耗内存资源，二是原始表中的索引不容易用到，所以尽量减少中间表也可以提升性能。
+ 
 
 **九、灵活使用 HAVING 子句**
 
@@ -361,186 +185,391 @@ SELECT *  FROM Addresses1 A1 WHERE id || state || city IN (SELECT id || state|| 
 
 
 
-# 一.基本规范
-
-1，不要使用外键
-
-表达超过100w行，修改需要加锁，影响性能。
-
-2 左前缀原则
-
-3 is null和 is not null不能使用索引
-
-4 like （%abc%）会导致索引失效
-
-如果不得不使用like进行模糊查询时，不要在关键字前面加%。
-反例：
-
-```abap
-select id,name,age from persons where name like '%abc%'
-```
+#  
 
 
 
-如果在关键字前面加%，那么查询是肯定要走全表查询的。
-正例：
+ 
 
-```abap
-select id,name,age from persons where name like 'abc%'
-```
+ 
 
- 若要提高效率，可以考虑全文检索。 
 
-5 or 是困难谓词（可以使用in（mysql优化了in可以使用索引））  否则将导致引擎放弃使用索引而进行全表扫描 
 
-6 查询字符串 不加引号会使索引失效
+ 
 
-**索引失效会导致行锁变表锁**。比如 vchar 查询不写单引号的情况
 
-7.在索引上计算（计算，函数，手动转换）会导致索引失效。
 
-8  避免在整个表上使用count(*) ，它可能会将整个表锁住 
 
-9  保持查询一致，这样后续类似的查询就能使用查询缓存了 
 
-10  如果合适，用 GROUP BY 代替 DISTINCT 
-
-11  在 WHERE、GROUP BY 和 ORDER BY 的列上加上索引 
-
-12 避免select * ，最小化你要查询的数据，只获取你需要的数据 
-
-13  保证索引简单，不要在同一列上加多个索引 
-
-14  MySQL 会选择错误的索引，这种情况使用 USE INDEX 
-
-15   当服务器的负载增加时，使用SHOW PROCESSLIST来查看慢的/有问题的查询 
+ 
 
 16  索引字段少于5个时，UNION 操作用 LIMIT，而不是 OR 
 
-17  应尽量避免在 where 子句中使用!=或<>操作符，否则将引擎放弃使用索引而进行全表扫描 
+ 
 
-18  in 和 not in 也是困难谓词，否则会导致全表扫描 
+ 
 
-19 关联代替子查询
+ 
 
-例如，我们要将客户基本信息表中没有任何订单的客户删除掉，就可以利用子查询先从销售信息表中将所有发出订单的客户ID取出来，然后将结果传递给主查询，如下所示： 
+ 
 
-DELETE FROM customerinfo 
-WHERE CustomerID NOT in (SELECT CustomerID FROM salesinfo ) 
+ 
 
-　　使用子查询可以一次性的完成很多逻辑上需要多个步骤才能完成的SQL操作，同时也可以避免事务或者表锁死，并且写起来也很容易。但是，有些情况下，子查询可以被更有效率的连接（JOIN）.. 替代。例如，假设我们要将所有没有订单记录的用户取出来，可以用下面这个查询完成： 
 
-SELECT * FROM customerinfo 
-WHERE CustomerID NOT in (SELECT CustomerID FROM salesinfo ) 
+ 
+ 
 
-　　如果使用连接（JOIN）.. 来完成这个查询工作，速度将会快很多。尤其是当salesinfo表中对CustomerID建有索引的话，性能将会更好，查询如下： 
 
-SELECT * FROM customerinfo 
-LEFT JOIN salesinfoON customerinfo.CustomerID=salesinfo. 
-CustomerID 
-WHERE salesinfo.CustomerID IS NULL 
+ 
 
-　　连接（JOIN）.. 之所以更有效率一些，是因为 MySQL不需要在内存中创建临时表来完成这个逻辑上的需要两个步骤的查询工作 ，两个表都可以使用索引。
+ 
 
-20  尽量避免大事务操作，提高系统并发能力 
 
-21 使用索引字段和 ORDER BY 来代替 MAX 
 
-22  使用 INSERT ON DUPLICATE KEY 或 INSERT IGNORE 来代替 UPDATE，避免 UPDATE 前需要先 SELECT
+  
 
-23 如果使用到了临时表，在存储过程的最后务必将所有的临时表显式删除，先 truncate table ，然后 drop table ，这样以避免系统表的较长时间锁定 
+ 
 
-24、避免使用 ORDER BY RAND()。 
+ 
 
-![\](http://www.2cto.com/uploadfile/Collfiles/20161021/201610211012372353.png)
 
-上面的查询，会导致每条记录都执行rand()，成本很高！
 
-建议，通过mt_rand()，先确定的随机主键，再从数据表中获取数据。25、LIMIT M,N 在特定场景下会降低查询效率，有节制使用。 
-26、使用 UNION 来代替 WHERE 子句中的子查询。 
-27、对 UPDATE 来说，使用 SHARE MODE 来防止排他锁。 
-28、重启 MySQL 时，记得预热数据库，确保将数据加载到内存，提高查询效率。 
-29、使用 DROP TABLE ，然后再 CREATE TABLE ，而不是 DELETE FROM ，以删除表中所有数据 
-
-30 尽量用union all代替union
-union和union all的差异主要是前者需要将两个（或者多个）结果集合并后再进行唯一性过滤操作，这就会涉及到排序，增加大量的cpu运算，加大资源消耗及延迟。所以当我们可以确认不可能出现重复结果集或者不在乎重复结果集的时候，尽量使用union all而不是union 
-
-31 避免类型转换和隐式转换
-
-这里所说的“类型转换”是指 where 子句中出现 column 字段的类型和传入的参数类型不一致的时候发生的类型转换：
-
-人为在column_name 上通过转换函数进行转换直接导致 MySQL(实际上其他数据库也会有同样的问题)无法使用索引，如果非要转换，应该在传入的参数上进行转换，由数据库自己进行转换，
-
-如果我们传入的数据类型和字段类型不一致，同时我们又没有做任何类型转换处理，MySQL 可能会自己对我们的数据进行类型转换操作，也可能不进行处理而交由存储引擎去处理，这样一来，就会出现索引无法使用的情况而造成执行计划问题
-
-42 大量数据的插入
-
-多条 insert或者Load data into table（从文件里载入数据到表里）
-
-建议，先关闭约束及索引，完成数据插入，再重新生成索引及约束
-
-43 对于并发性的SQL
-
-少用（不用）多表操作（子查询，联合查询），而是将复杂的SQL拆分多次执行。如果查询很原子（很小），会增加查询缓存的利用率
-
-44 单库和索引不查过500G
-
-45 单库表不超过150个
-
-46 单表字段不超过80个
-
-47 禁止使用 存储过程、触发器、Event实现逻辑
-
-48 禁止使用视图
-
-视图无法完成sql审核和优化，容易产生性能问题。
-
-49 禁止外键
-
-50 表的索引不超过5个
-
-51 表join 应有索引
-
-52 尽量满足2NF，冗余可以不满足3NF
-
-53 SQL中的in不超过500个
-
-54多使用等值，《，》使后面的字段无法使用索引
-
-55 update 、delete 不使用limit
-
-56 update 、delete 不使用order by 。group by
-
-57 多表关联必须使用表的别名
+  
 
 
 
 
 
-# 二 字段数据类型
-
-1.尽量使用数字型字段，若只含数值信息的字段尽量不要设计为字符型，这会降低查询和连接的性能，并会增加存储开销。这是因为引擎在处理查询和连 接时会逐个比较字符串中每一个字符，而对于数字型而言只需要比较一次就够了。
-
-2 .尽可能的使用 varchar/nvarchar 代替 char/nchar ，因为首先变长字段存储空间小，可以节省存储空间，其次对于查询来
-
-3 时间字段使用datetime 不适用timesstamp
-
-4禁止使用Bob或text
-
-5 varchar 长度小于4000
-
-6禁止字符类型放入时间
-
-7禁止字符类型放入数字
-
-8禁止表字段 单独定义字符集
-
-9 禁止使用哪个ENUM 使用TINYINNT代替
+#  
 
 
 
-MySQL 支持的数据类型非常多，选择正确的数据类型对于获取高性能至关重要。不管存储哪种类型的数据，下面几个简单的原则都有助于做出更好的选择。
 
-- 更小的通常更好：一般情况下，应该尽量使用可以正确存储数据的最小数据类型。
-  简单就好：简单的数据类型通常需要更少的CPU周期。例如，整数比字符操作代价更低，因为字符集和校对规则（排序规则）使字符比较比整型比较复杂。
-- 尽量避免NULL：通常情况下最好指定列为NOT NULL
+
+
+
+
+
+  
+
+
+
+ 
+
+
+
+ 
+
+
+
+ 
+
+
+
+ 
+
+
+
+9、： 
+
+
+
+ 
+
+
+
+11、应尽可能的避免更新clustered索引数据列， 因为clustered索引数据列的顺序就是表记录的物理存储顺序，一旦该列值改变将导致整个表记录的顺序的调整，会耗费相当大的资源。若应用系统需要频繁更新clustered索引数据列，那么需要考虑是否应将该索引建为clustered索引。
+
+
+
+ 
+
+
+
+ 
+
+
+
+ 
+
+
+
+ 
+
+
+
+ 
+
+ 
+
+
+
+18、一些SQL查询语句应加上nolock，读、写是会相互阻塞的，为了提高并发性能，对于一些查询，可以加上nolock，这样读的时候可以允许写，但缺点是可能读到未提交的脏数据。
+
+
+
+使用nolock有3条原则：
+
+
+
+- 查询的结果用于“插、删、改”的不能加nolock；
+- 查询的表属于频繁发生页分裂的，慎用nolock ；
+- 使用临时表一样可以保存“数据前影”，起到类似Oracle的undo表空间的功能，能采用临时表提高并发性能的，不要用nolock。
+
+
+
+ 
+
+
+
+ 
+
+
+
+ 。
+
+
+
+ 
+
+
+
+24、当服务器的内存够多时，配制线程数量 = 最大连接数+5，这样能发挥最大的效率；否则使用 配制线程数量<最大连接数启用SQL SERVER的线程池来解决，如果还是数量 = 最大连接数+5，严重的损害服务器的性能。
+
+
+
+25、查询的关联同写的顺序 ：
+
+
+
+
+
+select a.personMemberID, * from chineseresume a,personmember b where personMemberID = b.referenceid and a.personMemberID = ‘JCNPRH39681’ （A = B ,B = ‘号码’） 
+
+
+
+select a.personMemberID, * from chineseresume a,personmember b where a.personMemberID = b.referenceid and a.personMemberID = ‘JCNPRH39681’ and b.referenceid = ‘JCNPRH39681’ （A = B ,B = ‘号码’， A = ‘号码’） 
+
+
+
+select a.personMemberID, * from chineseresume a,personmember b where b.referenceid = ‘JCNPRH39681’ and a.personMemberID = ‘JCNPRH39681’ （B = ‘号码’， A = ‘号码’）
+
+
+
+26、。
+
+
+
+ 
+
+
+
+28、索引的使用规范：
+
+
+
+-  
+- 尽可能的使用索引字段作为查询条件，尤其是聚簇索引，必要时可以通过index index_name来强制指定索引；
+- 避免对大表查询时进行table scan，必要时考虑新建索引；
+- 在使用索引字段作为条件时，如果该索引是联合索引，那么必须使用到该索引中的第一个字段作为条件时才能保证系统使用该索引，否则该索引将不会被使用；
+-  　
+
+
+
+
+
+29、下列SQL条件语句中的列都建有恰当的索引，但执行速度却非常慢： 
+
+
+
+
+
+SELECT * FROM record WHERE substrINg(card_no,1,4)=’5378’ (13秒) 
+
+
+
+SELECT * FROM record WHERE amount/30< 1000 （11秒） 
+
+
+
+SELECT * FROM record WHERE convert(char(10),date,112)=’19991201’ （10秒） 
+
+
+
+**分析：** 
+
+WHERE子句中对列的任何操作结果都是在SQL运行时逐列计算得到的，因此它不得不进行表搜索，而没有使用该列上面的索引。
+
+
+
+
+
+如果这些结果在查询编译时就能得到，那么就可以被SQL优化器优化，使用索引，避免表搜索，因此将SQL重写成下面这样： 
+
+
+
+
+
+SELECT * FROM record WHERE card_no like ‘5378%’ （< 1秒） 
+
+
+
+SELECT * FROM record WHERE amount< 1000*30 （< 1秒） 
+
+
+
+SELECT * FROM record WHERE date= ‘1999/12/01’ （< 1秒）
+
+
+
+ 
+
+
+
+31、在所有的存储过程中，能够用SQL语句的，我绝不会用循环去实现。
+
+例如：列出上个月的每一天，我会用connect by去递归查询一下，绝不会去用循环从上个月第一天到最后一天。
+
+
+
+32、选择最有效率的表名顺序（只在基于规则的优化器中有效）： 
+
+Oracle的解析器按照从右到左的顺序处理FROM子句中的表名，FROM子句中写在最后的表（基础表 driving table）将被最先处理，在FROM子句中包含多个表的情况下，你必须选择记录条数最少的表作为基础表。
+
+
+
+如果有3个以上的表连接查询，那就需要选择交叉表（intersection table）作为基础表，交叉表是指那个被其他表所引用的表。
+
+
+
+ 
+
+ 
+
+
+
+ 
+
+
+
+
+
+39、索引创建规则： 
+
+
+
+- 表的主键、外键必须有索引； 
+- 数据量超过300的表应该有索引； 
+- 经常与其他表进行连接的表，在连接字段上应该建立索引； 
+- 经常出现在Where子句中的字段，特别是大表的字段，应该建立索引； 
+- 索引应该建在选择性高的字段上； 
+- 索引应该建在小字段上，对于大的文本字段甚至超长字段，不要建索引； 
+- 复合索引的建立需要进行仔细分析，尽量考虑用单字段索引代替； 
+- 正确选择复合索引中的主列字段，一般是选择性较好的字段； 
+- 复合索引的几个字段是否经常同时以AND方式出现在Where子句中？单字段查询是否极少甚至没有？如果是，则可以建立复合索引；否则考虑单字段索引； 
+- 如果复合索引中包含的字段经常单独出现在Where子句中，则分解为多个单字段索引； 
+- 如果复合索引所包含的字段超过3个，那么仔细考虑其必要性，考虑减少复合的字段； 
+- 如果既有单字段索引，又有这几个字段上的复合索引，一般可以删除复合索引； 
+- 频繁进行数据操作的表，不要建立太多的索引； 
+- 删除无用的索引，避免对执行计划造成负面影响； 
+- 表上建立的每个索引都会增加存储开销，索引对于插入、删除、更新操作也会增加处理上的开销。另外，过多的复合索引，在有单字段索引的情况下，一般都是没有存在价值的；相反，还会降低数据增加删除时的性能，特别是对频繁更新的表来说，负面影响更大。 
+- 尽量不要对数据库中某个含有大量重复的值的字段建立索引。
+
+
+
+40、MySQL查询优化总结：
+
+
+
+使用慢查询日志去发现慢查询，使用执行计划去判断查询是否正常运行，总是去测试你的查询看看是否他们运行在最佳状态下。
+
+
+
+久而久之性能总会变化，避免在整个表上使用count(*)，它可能锁住整张表，使查询保持一致以便后续相似的查询可以使用查询缓存，在适当的情形下使用GROUP BY而不是DISTINCT，在WHERE、GROUP BY和ORDER BY子句中使用有索引的列，保持索引简单，不在多个索引中包含同一个列。
+
+
+
+有时候MySQL会使用错误的索引，对于这种情况使用USE INDEX，检查使用SQL_MODE=STRICT的问题，对于记录数小于5的索引字段，在UNION的时候使用LIMIT不是是用OR。 
+
+
+
+为了避免在更新前SELECT，使用INSERT ON DUPLICATE KEY或者INSERT IGNORE，不要用UPDATE去实现，不要使用MAX，使用索引字段和ORDER BY子句，LIMIT M，N实际上可以减缓查询在某些情况下，有节制地使用，在WHERE子句中使用UNION代替子查询，在重新启动的MySQL，记得来温暖你的数据库，以确保数据在内存和查询速度快，考虑持久连接，而不是多个连接，以减少开销。
+
+
+
+基准查询，包括使用服务器上的负载，有时一个简单的查询可以影响其他查询，当负载增加在服务器上，使用SHOW PROCESSLIST查看慢的和有问题的查询，在开发环境中产生的镜像数据中测试的所有可疑的查询。
+
+
+
+41、MySQL备份过程：
+
+
+
+- 从二级复制服务器上进行备份；
+- 在进行备份期间停止复制，以避免在数据依赖和外键约束上出现不一致；
+- 彻底停止MySQL，从数据库文件进行备份；
+- 如果使用MySQL dump进行备份，请同时备份二进制日志文件 – 确保复制没有中断；
+- 不要信任LVM快照，这很可能产生数据不一致，将来会给你带来麻烦；
+- 为了更容易进行单表恢复，以表为单位导出数据——如果数据是与其他表隔离的。 
+- 当使用mysqldump时请使用–opt；
+- 在备份之前检查和优化表；
+- 为了更快的进行导入，在导入时临时禁用外键约束。；
+- 为了更快的进行导入，在导入时临时禁用唯一性检测；
+- 在每一次备份后计算数据库，表以及索引的尺寸，以便更够监控数据尺寸的增长；
+- 通过自动调度脚本监控复制实例的错误和延迟；
+- 定期执行备份。
+
+
+
+42、查询缓冲并不自动处理空格，因此，在写SQL语句时，应尽量减少空格的使用，尤其是在SQL首和尾的空格（因为查询缓冲并不自动截取首尾空格）。
+
+
+
+43、member用mid做标准进行分表方便查询么？一般的业务需求中基本上都是以username为查询依据，正常应当是username做hash取模来分表。
+
+
+
+而分表的话MySQL的partition功能就是干这个的，对代码是透明的；在代码层面去实现貌似是不合理的。
+
+
+
+44、我们应该为数据库里的每张表都设置一个ID做为其主键，而且最好的是一个INT型的（推荐使用UNSIGNED），并设置上自动增加的AUTO_INCREMENT标志。
+
+
+
+45、在所有的存储过程和触发器的开始处设置SET NOCOUNT ON，在结束时设置SET NOCOUNT OFF。无需在执行存储过程和触发器的每个语句后向客户端发送DONE_IN_PROC消息。
+
+
+
+ 
+
+
+
+ 
+
+ 
+
+-  
+
+ 
+
+ 
+
+
+
+
+
+
+
+ 
+
+ 
+
+
+
+ 
+
+
+
+
+
