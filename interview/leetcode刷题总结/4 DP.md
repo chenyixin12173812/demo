@@ -1277,7 +1277,7 @@ class Solution {
 
 # 3 打家劫舍问题（必考）
 
-## 3.1 打家劫舍
+## 3.1 打家劫舍  [不相邻最大子序列和](javascript:void(0);)
 
 你是一个专业的小偷，计划偷窃沿街的房屋。每间房内都藏有一定的现金，影响你偷窃的唯一制约因素就是相邻的房屋装有相互连通的防盗系统，如果两间相邻的房屋在同一晚上被小偷闯入，系统会自动报警。
 
@@ -1645,7 +1645,7 @@ class Solution {
 
 ```
 
-## 4.2 152. 乘积最大子数组
+## 4.2 152. 乘积最大子数组（必考）
 
 给你一个整数数组 `nums` ，请你找出数组中乘积最大的连续子数组（该子数组中至少包含一个数字），并返回该子数组所对应的乘积。
 
@@ -1666,6 +1666,8 @@ class Solution {
 输出: 0
 解释: 结果不能为 2, 因为 [-2,-1] 不是子数组。
 ```
+
+**dp以i结尾，最大最小乘积 前缀和**
 
 ```java
 class Solution {
@@ -1828,7 +1830,11 @@ class Solution {
 
 输入: [7,6,4,3,1]
 输出: 0
-解释: 在这种情况下, 没有交易完成, 所以最大利润为 0。
+解释: 在这种情况下, 没有交易完成, 所以最大利润
+
+关键点： 1 以当前值作为最大值
+
+​                2 最小值必须是一次的，所以后跟新min
 
 ```java
 方法1 双循环
@@ -3150,6 +3156,79 @@ class Solution {
      return dp[m][n];
     }
 }
+
+
+    public String LCS (String s1, String s2) {
+        // write code here
+        int len1 = s1.length();
+        int len2 = s2.length();
+        
+        int cLenNUm[][] = new int [len1+1][len2+1];
+        
+        
+        for(int i =1;i<=len1;i++) {
+           for(int j =1;j<=len2;j++)  {
+               
+                if (s1.charAt(i - 1) == s2.charAt(j - 1)) {//对应公式第二条相等
+                    cLenNUm[i][j] = cLenNUm[i - 1][j - 1] + 1;
+                } else {//对应公式第三条不相等
+                    cLenNUm[i][j] = Math.max(cLenNUm[i][j - 1], cLenNUm[i - 1][j]);
+                }  
+                 
+           } 
+           
+        }
+        //反推结果
+        int i = len1;
+        int j = len2;
+        StringBuffer sb = new StringBuffer();//作为结果
+        while (i > 0 && j > 0) {//这里其实处理了i=0,j=0的，对应公式0的反推场景
+            if (s1.charAt(i - 1) == s2.charAt(j - 1)) {//反推公式中不相等的场景
+                //该值一定是被选取到的，根据之前的公式，知道两条字符串的下标都前进一位
+                sb.append(s1.charAt(i - 1));
+                i--;
+                j--;
+            } else {//对应公式中不相等的反推场景
+                if (cLenNUm[i][j - 1] > cLenNUm[i - 1][j]) {//找大的那个方向，此处是左边大于上面，则该处的结果是来自左边
+                    j--;
+                } else if (cLenNUm[i][j - 1] < cLenNUm[i - 1][j]) {
+                    i--;
+                } else if (cLenNUm[i][j - 1] == cLenNUm[i - 1][j]) {
+                    //对于有分支的可能时，我们选取单方向
+                    j--;   //此结果对于结果1所选取方向，str1的下标左移一位.替换为j--，则结果对应与结果2选取的方向
+                }
+            }
+        }
+        //由于是从后往前加入字符的，需要反转才能得到正确结果
+        return sb.length()==0?"-1":sb.reverse().toString();
+        
+        
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```
 
 ## 1.3 516[最长回文子序列](https://leetcode-cn.com/problems/longest-palindromic-subsequence/)  5. 最长回文子串 
@@ -3226,6 +3305,12 @@ class Solution {
 
 输入: "cbbd"
 输出: "bb"
+
+**// 关键点  i必须倒序 ，以为它依赖i+1的变量**
+
+
+
+
 
 ```java
 class Solution {
@@ -3571,6 +3656,8 @@ class Solution {
 
 ## 2.1   72[编辑距离](https://leetcode-cn.com/problems/edit-distance/)（必考，非常频繁）
 
+https://www.nowcoder.com/practice/05fed41805ae4394ab6607d0d745c8e4?tpId=190&tqId=35213&rp=1&ru=%2Factivity%2Foj&qru=%2Fta%2Fjob-code-high-rd%2Fquestion-ranking&tab=answerKey
+
 给你两个单词 word1 和 word2，请你计算出将 word1 转换成 word2 所使用的最少操作数 。
 
 你可以对一个单词进行如下三种操作：
@@ -3588,6 +3675,16 @@ class Solution {
 horse -> rorse (将 'h' 替换为 'r')
 rorse -> rose (删除 'r')
 rose -> ros (删除 'e')
+
+
+
+
+
+**关键点 ：代价不一样 不能加1**
+
+
+
+
 
 ```java
 class Solution {
@@ -3628,6 +3725,67 @@ class Solution {
 
     }
 }
+    public int minEditCost (String word1, String word2, int ic, int dc, int rc) {
+        // write code here
+              int m = word1.length();
+      int n= word2.length();
+      int dp[][] = new int [m+1][n+1];
+
+        //有初值问题
+       // 初始化：当 word 2 长度为 0 时，将 word1 的全部删除
+        for (int i = 1; i <= m; i++) {
+            dp[i][0] = i*dc;
+        }
+        // 当 word1 长度为 0 时，就插入所有 word2 的字符
+        for (int j = 1; j <= n; j++) {
+            dp[0][j] = j*ic;
+        }
+      
+       for(int i =0;i<m;i++){
+         for(int j =0;j<n;j++){
+           if(word1.charAt(i)==word2.charAt(j)){
+               //无需操作
+               dp[i+1][j+1] = dp[i][j];
+           } else{
+               // 1、插入一个字符
+                int insert = dp[i + 1][j] + ic;
+                // 2、替换一个字符
+                int replace = dp[i][j] + rc;
+                // 3、删除一个字符
+                int delete = dp[i][j + 1] + dc;
+                dp[i + 1][j + 1] = Math.min(Math.min(insert, replace), delete);
+           }
+         }
+
+       }
+       return dp[m][n];
+        
+         
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```
 
 
@@ -3976,7 +4134,57 @@ class Solution {
 }
 ```
 
+## 2.5 [91. 解码方法](https://leetcode-cn.com/problems/decode-ways/)
 
+https://www.nowcoder.com/practice/046a55e6cd274cffb88fc32dba695668?tpId=190&tqId=36079&rp=1&ru=%2Factivity%2Foj&qru=%2Fta%2Fjob-code-high-rd%2Fquestion-ranking&tab=answerKey
+
+一条包含字母 A-Z 的消息通过以下映射进行了 编码 ：
+
+'A' -> 1
+'B' -> 2
+...
+'Z' -> 26
+要 解码 已编码的消息，所有数字必须基于上述映射的方法，反向映射回字母（可能有多种方法）。例如，"11106" 可以映射为：
+
+"AAJF" ，将消息分组为 (1 1 10 6)
+"KJF" ，将消息分组为 (11 10 6)
+注意，消息不能分组为  (1 11 06) ，因为 "06" 不能映射为 "F" ，这是由于 "6" 和 "06" 在映射中并不等价。
+
+给你一个只含数字的 非空 字符串 s ，请计算并返回 解码 方法的 总数 。
+
+题目数据保证答案肯定是一个 32 位 的整数。
+
+ 
+
+示例 1：
+
+输入：s = "12"
+输出：2
+解释：它可以解码为 "AB"（1 2）或者 "L"（12）。
+示例 2：
+
+输入：s = "226"
+输出：3
+解释：它可以解码为 "BZ" (2 26), "VF" (22 6), 或者 "BBF" (2 2 6) 。
+
+ 
+
+```java
+        int n = s.length();
+        int[] f = new int[n + 1];
+        f[0] = 1;
+        for (int i = 1; i <= n; ++i) {
+            if (s.charAt(i - 1) != '0') {
+                f[i] += f[i - 1];
+            }
+            if (i > 1 && s.charAt(i - 2) != '0' && ((s.charAt(i - 2) - '0') * 10 + (s.charAt(i - 1) - '0') <= 26)) {
+                f[i] += f[i - 2];
+            }
+        }
+        return f[n];
+    }
+ 
+```
 
 
 
@@ -4033,6 +4241,8 @@ class Solution {
 ```
 
 ## 3.2 64 [最小路径和](https://leetcode-cn.com/problems/minimum-path-sum/)
+
+https://www.nowcoder.com/practice/7d21b6be4c6b429bb92d219341c4f8bb?tpId=190&tqId=35224&rp=1&ru=%2Factivity%2Foj&qru=%2Fta%2Fjob-code-high-rd%2Fquestion-ranking&tab=answerKey
 
 给定一个包含非负整数的 m x n 网格，请找出一条从左上角到右下角的路径，使得路径上的数字总和为最小。
 
@@ -4640,6 +4850,82 @@ class Solution {
 
 
 # 2 0-1背包问题 （必考）
+
+## 2.0 0-1背包
+
+https://www.nowcoder.com/practice/2820ea076d144b30806e72de5e5d4bbf?tpId=190&tqId=38201&rp=1&ru=%2Factivity%2Foj&qru=%2Fta%2Fjob-code-high-rd%2Fquestion-ranking&tab=answerKey
+
+## 题目描述
+
+已知一个背包最多能容纳物体的体积为V
+
+现有n个物品第i个物品的体积为v_i*v**i* 第i个物品的重量为w_i*w**i*
+
+求当前背包最多能装多大重量的物品
+
+示例1
+
+## 输入
+
+[复制](javascript:void(0);)
+
+```
+10,2,[[1,3],[10,4]]
+```
+
+## 返回值
+
+[复制](javascript:void(0);)
+
+```
+4
+```
+
+## 说明
+
+```
+第一个物品的体积为1，重量为3，第二个物品的体积为10，重量为4。只取第二个物品可以达到最优方案，取物重量为4 
+```
+
+```java
+import java.util.*;
+
+
+public class Solution {
+    /**
+     * 代码中的类名、方法名、参数名已经指定，请勿修改，直接返回方法规定的值即可
+     * 计算01背包问题的结果
+     * @param V int整型 背包的体积
+     * @param n int整型 物品的个数
+     * @param vw int整型二维数组 第一维度为n,第二维度为2的二维数组,vw[i][0],vw[i][1]分别描述i+1个物品的vi,wi
+     * @return int整型
+     */
+    public int knapsack (int V, int n, int[][] vw) {
+        // write code here
+        
+        if(V==0 || n==0 || vw==null){
+            return 0;
+        }
+        int[][] dp=new int[n+1][V+1];
+        for(int i=1;i<=n;i++){
+            for(int j=1;j<=V;j++){
+                if(j<vw[i-1][0]){
+                    dp[i][j]=dp[i-1][j];
+                }
+                else{
+                    dp[i][j]=Math.max(dp[i-1][j],dp[i-1][j-vw[i-1][0]]+vw[i-1][1]);
+                }
+            }
+        }
+        return dp[n][V];
+        
+    }
+}
+
+
+```
+
+
 
 ## 2.1 416. 分割等和子集
 
