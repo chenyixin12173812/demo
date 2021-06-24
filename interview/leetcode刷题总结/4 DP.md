@@ -2001,26 +2001,28 @@ public class Solution {
 
     public int maxProfit(int[] prices) {
         int len = prices.length;
-        if (len < 2) {
-            return 0;
+        if(len<2){
+         return 0;
         }
-
-
-        int[][][] dp = new int[len][2][2];
-
-        dp[0][0][1] = -prices[0];
-
-        dp[0][1][1] = -prices[0];
-
-        for (int i = 1; i < len; i++) {
-
-            dp[i][0][1] = Math.max(dp[i - 1][0][1], -prices[i]);
-            dp[i][0][0] = Math.max(dp[i - 1][0][0], dp[i - 1][0][1] + prices[i]);
-            dp[i][1][1] = Math.max(dp[i - 1][1][1], dp[i - 1][0][0] - prices[i]);
-            dp[i][1][0] = Math.max(dp[i - 1][1][0], dp[i - 1][1][1] + prices[i]);
+        
+        
+        int dp [][][] =  new int [len][2][2];
+        dp[0][0][0] = -prices[0];
+        
+        dp[0][1][0] = -prices[0];
+        
+        
+        for(int i =1;i<len;i++) {
+            dp[i][0][0] = Math.max(dp[i-1][0][0],- prices[i]);
+            dp[i][0][1] = Math.max(dp[i-1][0][1],dp[i-1][0][0]+ prices[i]);
+            //只有第二次买入 执行了跨天操作
+            dp[i][1][0] = Math.max(dp[i-1][1][0],dp[i-1][0][1]- prices[i]);
+            dp[i][1][1] = Math.max(dp[i-1][1][1],dp[i-1][1][0]+ prices[i]);
+            
         }
-        return Math.max(dp[len - 1][0][0], dp[len - 1][1][0]);
-    }
+        
+        
+        return Math.max(dp[len-1][0][1],dp[len-1][1][1]);
 }
 
 ```
@@ -4729,22 +4731,31 @@ class Solution {
 
 ## 1.1 518零钱兑换 II
 
+**coin在外是不关心顺序的解， aim,在外是关系顺序的解**
+
+
+
+
+
 ```java
 class Solution {
-    public int change(int amount, int[] coins) {
-
-    int dp[] = new int[amount+1]; 
-
-    dp[0] =1;
-    for(int coin :coins) {
-       for(int i = 1;i<=amount;i++) {
-         if(i>=coin) {
-             dp[i] = dp[i] +dp[i-coin];
-         } 
-
-       }
-    }
-    return dp[amount];
+    public int change(int aim, int[] arr) {
+        int dp[] = new int [aim+1];
+        dp[0] =1;
+            
+            
+        for(int coin :arr) {    
+          for(int i =1;i<=aim;i++) {
+             if(i>=coin) {
+              //dp 第一次出现 当前cions[1,2,5] 第二次出现实际上一次 cions[1,2】  
+              dp[i] = dp[i] + dp[i-coin] ;   
+             } 
+          }
+            
+            
+        }
+            
+        return dp[aim];  
     }
 }
 ```
@@ -4821,6 +4832,16 @@ class Solution {
 
 输入: coins = [2], amount = 3
 输出: -1
+
+ **关键点： 填充了amount+1**
+
+**dp[i] = Math.min(dp[i],dp[i-coin]+1);**
+
+
+
+
+
+
 
 ```java
 class Solution {
@@ -6198,7 +6219,73 @@ class Solution {
 
 ## 2.6 454 题：四数相加 II
 
-## 2.7 325	和等于 k 的最长子数组长度  
+## 2.7 325	和等于 k 的最长子数组长度  (必考)
+
+https://www.nowcoder.com/practice/704c8388a82e42e58b7f5751ec943a11?tpId=190&tqId=36102&rp=1&ru=%2Factivity%2Foj&qru=%2Fta%2Fjob-code-high-rd%2Fquestion-ranking&tab=answerKey
+
+## 题目描述
+
+给定一个无序数组arr, 其中元素可正、可负、可0。给定一个整数k，求arr所有子数组中累加和为k的最长子数组长度
+
+示例1
+
+## 输入
+
+[复制](javascript:void(0);)
+
+```
+[1,-2,1,1,1],0
+```
+
+## 返回值
+
+[复制](javascript:void(0);)
+
+```
+3
+```
+
+
+
+```java
+public class Solution {
+    /**
+     * max length of the subarray sum = k
+     * @param arr int整型一维数组 the array
+     * @param k int整型 target
+     * @return int整型
+     */
+    public int maxlenEqualK (int[] arr, int k) {
+        
+        Map<Integer,Integer> map = new HashMap<>();
+        map.put(0,-1);
+        int pre = 0;
+        int max =0;
+        for(int i =0;i<arr.length;i++) {
+           pre = pre + arr[i]; 
+           
+           
+          if(map.containsKey(pre-k)) {
+             max =Math.max(max,i- map.get(pre-k));  
+           }
+            
+          if(!map.containsKey(pre)){
+              map.put(pre,i);
+          } 
+            
+            
+            
+        }
+        
+        
+        return max;
+    }
+}
+```
+
+
+
+
 
 ## 2.8 525. 连续数组(不求个数了求长度，重点看)
 
@@ -6493,6 +6580,8 @@ class Solution {
 
 ## 2 887. 鸡蛋掉落 （考过）
 
+https://www.nowcoder.com/practice/c215ba61c8b1443b996351df929dc4d4?tpId=190&tqId=36043&rp=1&ru=%2Factivity%2Foj&qru=%2Fta%2Fjob-code-high-rd%2Fquestion-ranking&tab=answerKey
+
 你将获得 K 个鸡蛋，并可以使用一栋从 1 到 N  共有 N 层楼的建筑。
 
 每个蛋的功能都是一样的，如果一个蛋碎了，你就不能再把它掉下去。
@@ -6524,6 +6613,36 @@ class Solution {
 
 输入：K = 3, N = 14
 输出：4
+
+```java
+public class Solution {
+    /**
+     * 代码中的类名、方法名、参数名已经指定，请勿修改，直接返回方法规定的值即可
+     * 返回最差情况下扔棋子的最小次数
+     * @param n int整型 楼层数
+     * @param k int整型 棋子数
+     * @return int整型
+     */
+    public int solve (int n, int k) {
+        // write code here
+        int T =1;
+        while(cal(k,T)<=n) {
+          T++;  
+        }
+        return T;
+    }
+    
+    private int cal(int K,int T) {
+        
+        if(K==1||T==1) return T+1;
+        
+        return cal(K-1,T-1) + cal(K,T-1);
+        
+    }
+    
+    
+}
+```
 
 
 

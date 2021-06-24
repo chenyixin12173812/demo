@@ -48,7 +48,7 @@ tail -n5：只查看慢查询文件的最后5行
 
 **具体执行的sql（优化后的）。**
 
- 其他工具：pt-query-digest 或者 mysqldumpslow(mysql自带的) 或 mysqlsla等工具对慢查询日志进行分析，
+ 其他工具**：pt-query-digest 或者 mysqldumpslow(mysql自带的) 或 mysqlsla等工具对慢查询日志进行分析**，
 
 
 
@@ -105,9 +105,13 @@ select * from emp where empno=413345;
 
    explain命令的使用十分简单，只需要"explain + sql语句"即可，如下命令就是对我们刚刚的慢查询语句使用explain之后的结果：
 
-![微信图片_20200831005847](C:\Users\chen\Desktop\微信图片_20200831005847.png)
+
 
 ## 0 explain命令的结果比较关键字段
+
+**type, key,rows,Extra**
+
+
 
 ![img](sql语句优化工具.assets/8694a4c27d1ed21b07e77eea5eb5afc150da3ff7.png)
 
@@ -245,7 +249,7 @@ type 列代表表示 查询计划的连接类型, 有多个参数，先从最佳
 
 #### 4.7 **type=index**  
 
-　　该联接类型与ALL相同都是扫描表，但**index只对索引树进行扫描**，而ALL是是对数据表文件的扫描。这通常比ALL快，因为索引文件通常比数据文件小。（也就是说虽然all和Index都是读全表，但index是从索引中读取的，而all是从硬盘中读的）主要优点是避免了排序，因为索引是排好序的。
+　　该联接类型与ALL相同都是扫描表，但**index只对索引树进行扫描**，而ALL是是对数据表文件的扫描。**这通常比ALL快，因为索引文件通常比数据文件小**。（也就是说虽然all和Index都是读全表，但index是从索引中读取的，而all是从硬盘中读的）主要优点是避免了排序，因为索引是排好序的。
 
 Extra列中看到“Using index”，说明mysql正在使用覆盖索引，只扫描索引的数据。　
 
@@ -283,7 +287,7 @@ Extra列中看到“Using index”，说明mysql正在使用覆盖索引，只�
 
   ## 6、key：最后选用的索引；
 
-该key 列指出mysql优化器决定选择使用哪个索引来优化对该表的访问。一般来说SQL查询中的每个表都只会使用一个索引。但是也存在索引合并的少数例外情况，如给定表上用到了两个或者更多索引。查询过程中由优化器来决定实际使用的索引。如果possible_keys索引列表中没有适合查找行的索引，那么这个key可能会命名一个不存在于该possible_keys值中的索引 。简单且重要 
+**该key 列指出mysql优化器决定选择使用哪个索引来优化对该表的访问**。一般来说SQL查询中的每个表都只会使用一个索引。但是也存在索引合并的少数例外情况，如给定表上用到了两个或者更多索引。查询过程中由优化器来决定实际使用的索引。如果possible_keys索引列表中没有适合查找行的索引，那么这个key可能会命名一个不存在于该possible_keys值中的索引 。简单且重要 
 
  ##  7、key_len：使用索引的最大长度；
 
@@ -460,7 +464,7 @@ num_a索引|num_b 没有索引，属于行数据
 
 　　**Using filesort**，表示无法利用索引完成排序，也有可能是因为多表连接时，排序字段不是驱动表中的字段，因此也没办法利用索引完成排序，建议添加适当的索引。
 
-　　**Using where**，通常是因为全表扫描或全索引扫描时（**type** 列显示为 **ALL** 或 **index**），又加上了WHERE条件，建议添加适当的索引。
+　　**Using where**，通常是因为**全表扫描或全索引扫描**时（**type** 列显示为 **ALL** 或 **index**），又加上了WHERE条件，建议添加适当的索引。
 
 其他状态例如：Using index、Using index condition、Using index for group-by 则都还好，不用紧张。
 
@@ -468,7 +472,7 @@ num_a索引|num_b 没有索引，属于行数据
 
 ​                                    
 
-   mysql除了提供explain命令用于查看命令执行计划外，还提供了profiling工具用于查看语句查询过程中的资源消耗情况。首先我们要使用以下命令开启Profiling功能：
+   mysql除了提供explain命令用于查看命令执行计划外**，还提供了profiling工具用于查看语句查询过程中的资源消耗情况。首先我们要使用以下命令开启Profiling功能**：
 
 ```
 `set` `profiling = 1;`
