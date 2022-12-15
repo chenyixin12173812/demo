@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
     <properties>
-        <spring.verson>5.2.0.RELEASE</spring.verson>
+        <spring.verson>5.2.20.RELEASE</spring.verson>
     </properties>
     <dependencies>
         <dependency>
